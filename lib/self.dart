@@ -1,8 +1,9 @@
 /**
- * Self values are either Dart `bool`, `int`, `double`, `String`,
- * [SelfObject], [SelfMethod], or a `List<SelfValue>` of such values.
+ * Self values are either Dart `int`, `double`, `String`, [SelfObject]
+ * (also used for `nil`, `true`, and `false`), [SelfMethod], [Mutator],
+ * or a `List<SelfValue>` of such values.
  */
-typedef SelfValue = Object?;
+typedef SelfValue = Object;
 
 /**
  * Implements a generic Self object with zero or more _slots_ to store other
@@ -40,18 +41,18 @@ typedef SelfValue = Object?;
  *
  *     an object (typically a method) with a parent-argument slot named "self", another argument slot and a data slot:
  *         (| :self*. :a. b |)
- *         var ss = new Slot.argument("self", null, parent:true);
- *         var sa = new Slot.argument("a", null);
+ *         var ss = new Slot.argument("self", nil, parent:true);
+ *         var sa = new Slot.argument("a", nil);
  *         var sb = new Slot.data("b", Self.nilObject);
  *         var sm = new Slot.mutator("b");
  *         new SelfObject([ss, sa, sb, sm]);
  *
  *     an object (typically a block method) with a parent-argument slot named "(parent)":
  *         (| :(parent)*. |)
- *         new SelfObject([new Slot.argument("(parent)", null, parent:true)]);
+ *         new SelfObject([new Slot.argument("(parent)", nil, parent:true)]);
  */
 class SelfObject {
-  /// Holds the object's [Slot] objects (must not be null).
+  /// Holds the object's [Slot] objects.
   final List<Slot> slots;
 
   /// Constructs a new Self object with the given list of [slots].
@@ -121,8 +122,8 @@ class SelfObject {
  *
  *     a method with a block literal:
  *         ( [ ] )
- *         var mth = new SelfMethod([new Slot.argument("(parent)", null, parent: true)], []);
- *         var blk = new SelfObject([new Slot.argument("(lexicalParent)", null),
+ *         var mth = new SelfMethod([new Slot.argument("(parent)", nil, parent: true)], []);
+ *         var blk = new SelfObject([new Slot.argument("(lexicalParent)", nil),
  *                                   new Slot.constant("value"), mth),
  *                                   new Slot.constant("parent", Self.traitsBlock, parent:true)];
  *         new SelfMethod([...], [new Blk(new Lit(blk))]);
@@ -146,30 +147,30 @@ class SelfObject {
  *     an unary method called size by assignment (body omitted):
  *         (| size = ( ... ) |)
  *         (| size = ( | :self* | ... ) |)
- *         new SelfMethod([new Slot.argument("self", null, parent:true)], [...]);
+ *         new SelfMethod([new Slot.argument("self", nil, parent:true)], [...]);
  *
  *     a binary method called + by assignment (body omitted):
  *         (| + num = ( ... ) |)
  *         (| + = (| :self*. :num | ... ) |)
- *         new SelfMethod([new Slot.argument("self", null, parent:true), new Slot.argument("num", null)], [...]);
+ *         new SelfMethod([new Slot.argument("self", nil, parent:true), new Slot.argument("num", nil)], [...]);
  *
  *     a single keyword method called ifTrue: by assignment (body omitted):
  *         (| ifTrue: block = ( ... ) |)
  *         (| ifTrue: = (| :self*. :block | ... ) |)
- *         new SelfMethod([new Slot.argument("self", null, parent:true), new Slot.argument("block", null)], [...]);
+ *         new SelfMethod([new Slot.argument("self", nil, parent:true), new Slot.argument("block", nil)], [...]);
  *
  *     a keyword method with two keyword parts called ifTrue:False: by assignment (body omitted):
  *         (| ifTrue: block False: anotherBlock = ( ... ) |)
  *         (| ifTrue:False: = (| :self*. :block. :anotherBlock | ... ) |)
- *         new SelfMethod([new Slot.argument("self", null, parent:true)
- *                         new Slot.argument("block", null),
- *                         new Slot.argument("anotherBlock", null)], [...]);
+ *         new SelfMethod([new Slot.argument("self", nil, parent:true)
+ *                         new Slot.argument("block", nil),
+ *                         new Slot.argument("anotherBlock", nil)], [...]);
  *
  *     a binary method with two additional data slots:
  *         (| & obj = (| t1. t2 <- 7 | ... ) |)
  *         (| & = (| *self:. :obj. t1. t2 <- 7 | ... ) |)
- *         new SelfMethod([new Slot.argument("self", null, parent:true),
- *                         new Slot.argument("obj", null),
+ *         new SelfMethod([new Slot.argument("self", nil, parent:true),
+ *                         new Slot.argument("obj", nil),
  *                         new Slot.data("t1", Self.nilObject),
  *                         new Slot.mutator("t1")],
  *                         new Slot.data("t2", 7),
@@ -224,7 +225,7 @@ class SelfObject {
  * object to gain access to the method slots `a` and `b`.
  */
 class SelfMethod extends SelfObject {
-  /// Holds the method's code (must not be null).
+  /// Holds the method's code.
   final List<Code> codes;
 
   /// Constructs a new method object with the given [slots] and [codes].
@@ -258,11 +259,11 @@ class SelfMethod extends SelfObject {
 
   /**
    * Executes the method using itself as activation object.
-   * Returns either `null` for empty methods or the result of the last code object.
+   * Returns either `nil` for empty methods or the result of the last code object.
    */
   SelfValue execute() {
     try {
-      return codes.fold(null, (result, Code code) => code.execute(this));
+      return codes.fold(Self.nilObject, (result, Code code) => code.execute(this));
     } on NonLocalReturn catch (ret) {
       if (ret.target == this) {
         return ret.value;
@@ -371,15 +372,15 @@ class Mutator {
  *      a method literal:
  *          ( 42 )
  *          new Mth(new Lit(new SelfMethod(
- *              [new Slot.argument("self", null, parent:true)], 
+ *              [new Slot.argument("self", nil, parent:true)], 
  *              [new Lit(42)])))
  *
  * Block objects must be wrapped with a [Blk] for the same reason:
  *
  *      a block literal:
  *          [ 21 ]
- *          var blk = new SelfMethod([new Slot.argument("(parent)", null, parent:true)], [new Lit(21)]);
- *          new Blk(new Lit(new SelfObject([new Slot.argument("(lexicalParent)", null),
+ *          var blk = new SelfMethod([new Slot.argument("(parent)", nil, parent:true)], [new Lit(21)]);
+ *          new Blk(new Lit(new SelfObject([new Slot.argument("(lexicalParent)", nil),
  *                                          new Slot.constant("value", blk),
  *                                          new Slot.constant("parent", Self.traitsBlock)])));
  *
@@ -454,7 +455,7 @@ class Mth extends Code {
 
   @override
   SelfValue execute(SelfObject activation) {
-    return (lit.value as SelfMethod).codes.fold(null, (result, Code code) => code.execute(activation));
+    return (lit.value as SelfMethod).codes.fold(Self.nilObject, (result, Code code) => code.execute(activation));
   }
 }
 
@@ -564,7 +565,7 @@ class Ret extends Code {
 
 class NonLocalReturn {
   final SelfMethod target;
-  final Object? value;
+  final SelfValue value;
   NonLocalReturn(this.target, this.value);
 }
 
@@ -800,10 +801,10 @@ class Parser {
         }
       }
     }
-    slots.insert(0, Slot.a("(parent)", null, parent: true));
+    slots.insert(0, Slot.a("(parent)", Self.nilObject, parent: true));
     return SelfObject([
       Slot.c("parent", Self.traitsBlock, parent: true),
-      Slot.a("lexicalParent", null),
+      Slot.a("lexicalParent", Self.nilObject),
       Slot.c(selector, SelfMethod(slots, codes))
     ]);
   }
@@ -934,9 +935,9 @@ class Parser {
   /// Prepends a ":self*" slot if missing and inject optional inline arguments before method's local slots.
   void _injectMethodArgs(SelfMethod m, List<String> args) {
     if (m.slots.isEmpty || m.slots[0].name != "self") {
-      m.slots.insert(0, Slot.a("self", null, parent: true));
+      m.slots.insert(0, Slot.a("self", Self.nilObject, parent: true));
       for (int i = 0; i < args.length; i++) {
-        m.slots.insert(i + 1, Slot.a(args[i], null));
+        m.slots.insert(i + 1, Slot.a(args[i], Self.nilObject));
       }
     }
   }

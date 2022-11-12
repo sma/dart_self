@@ -3,6 +3,8 @@ import 'package:test/test.dart';
 
 SelfObject o(SelfValue v) => v as SelfObject;
 
+final nil = Self.nilObject;
+
 void main() {
   group('Self object:', () {
     test('Access a slot value', () {
@@ -17,7 +19,7 @@ void main() {
     });
 
     test('Access a slot value in parent object without endless loop', () {
-      var obj1 = SelfObject([Slot.c('b', null, parent: true), Slot.c('a', 1)]);
+      var obj1 = SelfObject([Slot.c('b', nil, parent: true), Slot.c('a', 1)]);
       var obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
       obj1.slots[0].value = obj2;
       expect(Self.findSlot(obj2, 'a').value, 1);
@@ -46,8 +48,8 @@ void main() {
   });
 
   group('Self method:', () {
-    test('Return null for empty methods', () {
-      expect(SelfMethod([], []).execute(), null);
+    test('Return nil for empty methods', () {
+      expect(SelfMethod([], []).execute(), nil);
     });
 
     test('Return the last expression', () {
@@ -87,8 +89,9 @@ void main() {
     test('Literal objects', () {
       var a = SelfObject([]);
       expect(Lit(1).execute(a), 1);
+      expect(Lit(1.1).execute(a), 1.1);
       expect(Lit('a').execute(a), 'a');
-      expect(Lit(null).execute(a), null);
+      expect(Lit(nil).execute(a), nil);
       expect(Lit(true).execute(a), true);
       expect(Lit(false).execute(a), false);
       var obj = SelfObject([]);
@@ -103,9 +106,9 @@ void main() {
 
     test('Literal blocks', () {
       var a = SelfObject([]);
-      var m = SelfMethod([Slot.a("(parent)", null, parent: true)], [Lit(1)]);
+      var m = SelfMethod([Slot.a("(parent)", nil, parent: true)], [Lit(1)]);
       var b = SelfObject(
-          [Slot.c("parent", Self.traitsBlock, parent: true), Slot.a("(lexicalParent)", null), Slot.c("value", m)]);
+          [Slot.c("parent", Self.traitsBlock, parent: true), Slot.a("(lexicalParent)", nil), Slot.c("value", m)]);
       var rslt = o(Blk(b).execute(a));
       expect(rslt.slots[0].value, Self.traitsBlock);
       expect(rslt.slots[1].value, same(a));
@@ -122,7 +125,7 @@ void main() {
     });
 
     test('Explicit message send', () {
-      var a = SelfObject([Slot.c('o', null)]);
+      var a = SelfObject([Slot.c('o', nil)]);
       var obj1 = SelfObject([Slot.c('a', 1)]);
       a.slots[0].value = obj1;
       expect(Msg(Msg(null, 'o', []), 'a', []).execute(a), 1);
@@ -192,7 +195,7 @@ void main() {
         test('Empty data slot', () {
           final obj = o(Parser("(| ab |)").parseLiteral());
           expect(obj.slots[0].name, 'ab');
-          expect(obj.slots[0].value, Self.nilObject);
+          expect(obj.slots[0].value, nil);
           expect(obj.slots[0].parent, false);
           expect(obj.slots[0].argument, false);
           expect(obj.slots[0].data, true);
@@ -225,7 +228,7 @@ void main() {
         test('Empty data parent slot', () {
           final obj = o(Parser("(| ab* |)").parseLiteral());
           expect(obj.slots[0].name, 'ab');
-          expect(obj.slots[0].value, Self.nilObject);
+          expect(obj.slots[0].value, nil);
           expect(obj.slots[0].parent, true);
           expect(obj.slots[0].argument, false);
           expect(obj.slots[0].data, true);
@@ -237,7 +240,7 @@ void main() {
         test('Argument slot', () {
           final obj = o(Parser("(| :ab |)").parseLiteral());
           expect(obj.slots[0].name, 'ab');
-          expect(obj.slots[0].value, Self.nilObject);
+          expect(obj.slots[0].value, nil);
           expect(obj.slots[0].parent, false);
           expect(obj.slots[0].argument, true);
           expect(obj.slots[0].data, false);
@@ -247,7 +250,7 @@ void main() {
         test('Argument parent slot', () {
           final obj = o(Parser("(| :ab* |)").parseLiteral());
           expect(obj.slots[0].name, 'ab');
-          expect(obj.slots[0].value, Self.nilObject);
+          expect(obj.slots[0].value, nil);
           expect(obj.slots[0].parent, true);
           expect(obj.slots[0].argument, true);
           expect(obj.slots[0].data, false);
