@@ -353,6 +353,10 @@ void main() {
       });
 
       group("Explicit:", () {
+        test("Single unary", () {
+          expect(Parser("1 negate").parseMessage().toString(), "{negate 1}");
+        });
+
         test("Single binary", () {
           expect(Parser("1 + 2").parseMessage().toString(), "{+ 1 2}");
         });
@@ -375,6 +379,63 @@ void main() {
       test('Parenthesized messages', () {
         // expect(new Parser("(1 + 2) * 3").parseMessage().toString(), "(* (+ <1> <2> <3>))");
         // expect(new Parser("1 + (2 * 3)").parseMessage().toString(), "(+ <1> (* <2> <3>))");
+      });
+    });
+
+    group("Errors:", () {
+      final throwsSyntaxError = throwsA(startsWith('SyntaxError:'));
+
+      test("Garbage at the end", () {
+        expect(() => Parser("1 2").parse(), throwsSyntaxError);
+      });
+      test("Not a literal", () {
+        expect(() => Parser("").parseLiteral(), throwsSyntaxError);
+        expect(() => Parser("foo").parseLiteral(), throwsSyntaxError);
+        expect(() => Parser("+ bar").parseLiteral(), throwsSyntaxError);
+        expect(() => Parser("foo: 1").parseLiteral(), throwsSyntaxError);
+        expect(() => Parser("|").parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(":").parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(".").parseLiteral(), throwsSyntaxError);
+        expect(() => Parser("^").parseLiteral(), throwsSyntaxError);
+      });
+      test("Missing ) in object", () {
+        expect(() => Parser("(").parseObject(), throwsSyntaxError);
+        expect(() => Parser("(a").parseObject(), throwsSyntaxError);
+        expect(() => Parser("(|a|").parseObject(), throwsSyntaxError);
+        expect(() => Parser("(|a| b").parseObject(), throwsSyntaxError);
+      });
+      test("Missing ] in block", () {
+        expect(() => Parser("[").parseBlock(), throwsSyntaxError);
+        expect(() => Parser("[a").parseBlock(), throwsSyntaxError);
+        expect(() => Parser("[|a|").parseBlock(), throwsSyntaxError);
+        expect(() => Parser("[|a| b").parseBlock(), throwsSyntaxError);
+        expect(() => Parser("[^1.").parseBlock(), throwsSyntaxError);
+      });
+      test("Missing | in slots", () {
+        expect(() => Parser("(|").parse(), throwsSyntaxError);
+        expect(() => Parser("(|a").parse(), throwsSyntaxError);
+        expect(() => Parser("(|a.").parse(), throwsSyntaxError);
+        expect(() => Parser("(|a. b = 1").parse(), throwsSyntaxError);
+        expect(() => Parser("[|").parse(), throwsSyntaxError);
+        expect(() => Parser("[|a").parse(), throwsSyntaxError);
+        expect(() => Parser("[|a.").parse(), throwsSyntaxError);
+        expect(() => Parser("[|a. b = 1").parse(), throwsSyntaxError);
+      });
+      test("Not a slot", () {
+        expect(() => Parser("(|").parse(), throwsSyntaxError);
+        expect(() => Parser("(|1|)").parse(), throwsSyntaxError);
+        expect(() => Parser("(|'1'|)").parse(), throwsSyntaxError);
+        expect(() => Parser("(|()|)").parse(), throwsSyntaxError);
+        expect(() => Parser("(|[]|)").parse(), throwsSyntaxError);
+        expect(() => Parser("(|.|)").parse(), throwsSyntaxError);
+        expect(() => Parser("(|^|)").parse(), throwsSyntaxError);
+      });
+      test("Inconsistent inline parameters", () {
+        expect(() => Parser("(|at: a Put: = ()|)").parse(), throwsSyntaxError);
+        expect(() => Parser("(|at: Put: b = ()|)").parse(), throwsSyntaxError);
+      });
+      test("<- used as method", () {
+        expect(() => Parser("(|foo: a <- 42|)").parse(), throwsSyntaxError);
       });
     });
   });
