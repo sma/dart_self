@@ -243,7 +243,7 @@ class SelfMethod extends SelfObject {
    * parent-argument `self` (or `(parent)` in the case of blocks) must be 
    * the first slot and all other arguments must be the adjacent slots.
    */
-  SelfValue activate(List<SelfValue> arguments) {
+  SelfValue activate(Self self, List<SelfValue> arguments) {
     SelfMethod activation = clone();
     arguments.asMap().forEach((i, a) {
       activation.slots[i].value = a;
@@ -254,16 +254,16 @@ class SelfMethod extends SelfObject {
       // the value of the method's `(parent)` slot.
       activation.slots[0].value = (arguments[0] as SelfObject).slots[1].value;
     }
-    return activation.execute();
+    return activation.execute(self);
   }
 
   /**
    * Executes the method using itself as activation object.
    * Returns either `nil` for empty methods or the result of the last code object.
    */
-  SelfValue execute() {
+  SelfValue execute(Self self) {
     try {
-      return codes.fold(Self.nilObject, (result, Code code) => code.execute(this));
+      return codes.fold(self.nilObject, (result, Code code) => code.execute(self, this));
     } on NonLocalReturn catch (ret) {
       if (ret.target == this) {
         return ret.value;
@@ -423,7 +423,7 @@ class Mutator {
  */
 abstract class Code {
   /// Executes this instruction in the context of the given [activation].
-  SelfValue execute(SelfObject activation);
+  SelfValue execute(Self self, SelfObject activation);
 }
 
 /**
@@ -437,7 +437,7 @@ class Lit extends Code {
   Lit(this.value);
 
   @override
-  SelfValue execute(SelfObject activation) => value;
+  SelfValue execute(Self self, SelfObject activation) => value;
 
   @override
   String toString() => value is String ? "'$value'" : '$value';
@@ -454,8 +454,8 @@ class Mth extends Code {
   Mth(this.lit);
 
   @override
-  SelfValue execute(SelfObject activation) {
-    return (lit.value as SelfMethod).codes.fold(Self.nilObject, (result, Code code) => code.execute(activation));
+  SelfValue execute(Self self, SelfObject activation) {
+    return (lit.value as SelfMethod).codes.fold(self.nilObject, (result, Code code) => code.execute(self, activation));
   }
 }
 
@@ -470,7 +470,7 @@ class Blk extends Code {
   Blk(this.block);
 
   @override
-  SelfValue execute(SelfObject activation) {
+  SelfValue execute(Self self, SelfObject activation) {
     return block.clone()..slots[1].value = activation;
   }
 }
@@ -495,16 +495,16 @@ class Msg extends Code {
   Msg(this.receiver, this.selector, this.arguments);
 
   @override
-  SelfValue execute(SelfObject activation) {
+  SelfValue execute(Self self, SelfObject activation) {
     // recursively evaluate the receiver
-    final r = receiver?.execute(activation) ?? activation;
+    final r = receiver?.execute(self, activation) ?? activation;
 
     // recursively evaluate the arguments
-    final a = arguments.map((Code arg) => arg.execute(activation));
+    final a = arguments.map((Code arg) => arg.execute(self, activation));
 
     // deal with primitives
     if (selector.startsWith('_')) {
-      final p = Self.primitives[selector];
+      final p = self.primitives[selector];
       if (p != null) {
         return p([r, ...a]);
       }
@@ -513,13 +513,13 @@ class Msg extends Code {
 
     // search for the method starting with the receiver
     // an error is thrown if there is no matching slot
-    Slot? slot = Self.findSlot(r, selector);
+    Slot? slot = self.findSlot(r, selector);
     final v = slot.value;
 
     // if the slot found is a mutator, search for the matching data slot
     // (which stores the value) which must exist and mutate it
     if (v is Mutator) {
-      slot = Self._findSlot(r, (v).name, {});
+      slot = self._findSlot(r, (v).name, {});
       if (slot == null) {
         throw "MutatorWithoutDataSlot($selector)";
       }
@@ -529,9 +529,9 @@ class Msg extends Code {
     // if the slot contains a method, activate it (this will execute the method)
     if (v is SelfMethod) {
       // in case of implicit sends, we need to set self to the original self
-      final rr = receiver == null ? Self.findSlot(r, "self").value : r;
+      final rr = receiver == null ? self.findSlot(r, "self").value : r;
 
-      return v.activate([rr, ...a]);
+      return v.activate(self, [rr, ...a]);
     }
 
     // otherwise, the slot contains a literal
@@ -553,13 +553,13 @@ class Ret extends Code {
   Ret(this.code);
 
   @override
-  SelfValue execute(SelfObject activation) {
+  SelfValue execute(Self self, SelfObject activation) {
     SelfMethod target = activation as SelfMethod;
     // search for the method context to return from
     while (target.isBlock) {
       target = target.slots[0].value as SelfMethod; // TODO cast
     }
-    throw NonLocalReturn(target, code.execute(activation));
+    throw NonLocalReturn(target, code.execute(self, activation));
   }
 }
 
@@ -692,11 +692,12 @@ class Parser {
     });
   }
 
+  final Self self;
   final List<_Token> _tokens;
   int index;
 
   /// Constructs a new parser to parse [source].
-  Parser(String source)
+  Parser(this.self, String source)
       : _tokens = _tokenize(source),
         index = 0;
 
@@ -723,7 +724,7 @@ class Parser {
         throw syntaxError("End of input expected");
       }
     }
-    return SelfMethod([Slot.a("lobby", Self.lobby, parent: true)], codes);
+    return SelfMethod([Slot.a("lobby", self.lobby, parent: true)], codes);
   }
 
   /// Returns a literal (a number, string or object) parsed from the source.
@@ -790,7 +791,7 @@ class Parser {
     index++; // skip ]
     // an empty block should return nil
     if (codes.isEmpty) {
-      codes.add(Lit(Self.nilObject));
+      codes.add(Lit(self.nilObject));
     }
     // create the block method's selector name
     String selector = "value";
@@ -803,10 +804,10 @@ class Parser {
         }
       }
     }
-    slots.insert(0, Slot.a("(parent)", Self.nilObject, parent: true));
+    slots.insert(0, Slot.a("(parent)", self.nilObject, parent: true));
     return SelfObject([
-      Slot.c("parent", Self.traitsBlock, parent: true),
-      Slot.a("lexicalParent", Self.nilObject),
+      Slot.c("parent", self.traitsBlock, parent: true),
+      Slot.a("lexicalParent", self.nilObject),
       Slot.c(selector, SelfMethod(slots, codes))
     ]);
   }
@@ -901,7 +902,7 @@ class Parser {
       } else if (val is Mth) {
         val = val.lit.value;
       } else if (val is Msg) {
-        val = val.execute(Self.lobby);
+        val = val.execute(self, self.lobby);
       }
       // methods may need argument slots
       if (val is SelfMethod) {
@@ -918,11 +919,11 @@ class Parser {
       if (args.isNotEmpty) {
         throw syntaxError("No inline parameters with <- allowed");
       }
-      val = parseMessage().execute(Self.lobby);
+      val = parseMessage().execute(self, self.lobby);
       // argument slots are never data slots
       data = !argument;
     } else {
-      val = Self.nilObject;
+      val = self.nilObject;
       data = !argument;
     }
     if (argument) {
@@ -937,9 +938,9 @@ class Parser {
   /// Prepends a ":self*" slot if missing and inject optional inline arguments before method's local slots.
   void _injectMethodArgs(SelfMethod m, List<String> args) {
     if (m.slots.isEmpty || m.slots[0].name != "self") {
-      m.slots.insert(0, Slot.a("self", Self.nilObject, parent: true));
+      m.slots.insert(0, Slot.a("self", self.nilObject, parent: true));
       for (int i = 0; i < args.length; i++) {
-        m.slots.insert(i + 1, Slot.a(args[i], Self.nilObject));
+        m.slots.insert(i + 1, Slot.a(args[i], self.nilObject));
       }
     }
   }
@@ -1004,28 +1005,28 @@ class Parser {
  * receiver. There's no error handling yet.
  */
 class Self {
-  static final SelfObject traitsNumber = SelfObject([]);
+  final SelfObject traitsNumber = SelfObject([]);
 
-  static final SelfObject traitsString = SelfObject([]);
+  final SelfObject traitsString = SelfObject([]);
 
-  static final SelfObject traitsVector = SelfObject([]);
+  final SelfObject traitsVector = SelfObject([]);
 
-  static final SelfObject traitsBlock = SelfObject([]);
+  final SelfObject traitsBlock = SelfObject([]);
 
-  static final SelfObject nilObject = SelfObject([]);
+  final SelfObject nilObject = SelfObject([]);
 
-  static final SelfObject trueObject = SelfObject([]);
+  final SelfObject trueObject = SelfObject([]);
 
-  static final SelfObject falseObject = SelfObject([]);
+  final SelfObject falseObject = SelfObject([]);
 
-  static SelfObject lobby = SelfObject([]);
+  final SelfObject lobby = SelfObject([]);
 
-  static Map<String, SelfValue Function(List<SelfValue> a)> primitives = {};
+  final Map<String, SelfValue Function(List<SelfValue> a)> primitives = {};
 
   /**
    * Bootstraps the runtime system.
    * 
-   * It creates the [lobby] with three slots `lobby`, `globals`, and `traits`.
+   * It initializes the [lobby] with three slots `lobby`, `globals`, and `traits`.
    * 
    * The lobby needs to refer to itself to give itself its name. The `globals`
    * object has slots for `nil`, `true` and `false`. The `traits` object has 
@@ -1039,7 +1040,23 @@ class Self {
    *
    * This method also sets up a number of primitive functions.
    */
-  static void initialize() {
+  void initialize() {
+    // reset everything
+    for (final object in [
+      nilObject,
+      trueObject,
+      falseObject,
+      traitsBlock,
+      traitsNumber,
+      traitsString,
+      traitsVector,
+      lobby,
+    ]) {
+      object.slots.clear();
+    }
+    primitives.clear();
+
+    // define everything
     SelfObject globals = SelfObject([
       Slot.c('nil', nilObject),
       Slot.c('true', trueObject),
@@ -1051,14 +1068,13 @@ class Self {
       Slot.c('vector', traitsVector),
       Slot.c('block', traitsBlock),
     ]);
-    lobby = SelfObject([
-      Slot.c('lobby', nilObject),
+    lobby.slots.addAll([
+      Slot.c('lobby', lobby),
       Slot.c('globals', globals, parent: true),
       Slot.c('traits', traits),
     ]);
-    lobby.slots[0].value = lobby;
 
-    primitives = <String, SelfValue Function(List<SelfValue> a)>{
+    primitives.addAll({
       '_AddSlotsIfAbsent:': (a) {
         var r = a[0] as SelfObject;
         for (final slot in (a[1] as SelfObject).slots) {
@@ -1091,7 +1107,7 @@ class Self {
         return a[2];
       },
       '_VectorFrom:To:': (a) => (a[0] as List<SelfValue>).sublist(a[1] as int, a[2] as int),
-    };
+    });
 
     // now do the rest of the initialization using Self
     execute("""
@@ -1184,8 +1200,8 @@ class Self {
   /**
    * Parses the given [source] and executes it in the context of the [lobby].
    */
-  static SelfValue execute(String source) {
-    return Parser(source).parse().execute();
+  SelfValue execute(String source) {
+    return Parser(this, source).parse().execute(this);
   }
 
   /**
@@ -1193,9 +1209,9 @@ class Self {
    * [arguments], passing the remaining elements as [arguments]. This
    * must match the arity of the selector [name].
    */
-  static SelfValue send(String name, List<SelfValue> arguments) {
+  SelfValue send(String name, List<SelfValue> arguments) {
     final value = findSlot(arguments[0], name).value;
-    if (value is SelfMethod) return value.activate(arguments);
+    if (value is SelfMethod) return value.activate(this, arguments);
     return value;
   }
 
@@ -1204,7 +1220,7 @@ class Self {
    * Throws a runtime exception if there is no such slot.
    * Throws a runtime exception if there is more than one such slot.
    */
-  static Slot findSlot(SelfValue obj, String name) {
+  Slot findSlot(SelfValue obj, String name) {
     Slot? slot = _findSlot(obj, name, {});
     if (slot == null) {
       throw "UnknownMessageSend($name)";
@@ -1212,7 +1228,7 @@ class Self {
     return slot;
   }
 
-  static Slot? _findSlot(SelfValue obj, String name, Set<SelfValue> visited) {
+  Slot? _findSlot(SelfValue obj, String name, Set<SelfValue> visited) {
     if (!visited.contains(obj)) {
       visited.add(obj);
       final slots = _getSlots(obj);
@@ -1243,7 +1259,7 @@ class Self {
    * Returns the list of slots of any object, not only [SelfObject]s.
    * We special case numbers, strings and lists here.
    */
-  static List<Slot> _getSlots(SelfValue obj) {
+  List<Slot> _getSlots(SelfValue obj) {
     if (obj is num) return traitsNumber.slots;
     if (obj is String) return traitsString.slots;
     if (obj is List) return traitsVector.slots;

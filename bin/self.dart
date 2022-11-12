@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:self/self.dart';
 
 void main(List<String> arguments) {
-  Self.initialize();
+  final self = Self()..initialize();
   for (;;) {
     stdout.write('> ');
     final line = stdin.readLineSync();
@@ -12,9 +12,9 @@ void main(List<String> arguments) {
       break;
     }
     try {
-      final result = Self.execute(line);
+      final result = self.execute(line);
       try {
-        stdout.writeln(Self.send('printString', [result]));
+        stdout.writeln(self.send('printString', [result]));
       } on String catch (exception) {
         if (exception == 'UnknownMessageSend(printString)') {
           stdout.writeln('$result (no printString)');
