@@ -696,7 +696,7 @@ void main() {
       });
 
       test('from/to', () {
-        expect( Self.execute('(traits vector clone: 3) from: 1 To: 1'), <SelfObject>[]);
+        expect(Self.execute('(traits vector clone: 3) from: 1 To: 1'), <SelfObject>[]);
       });
     });
 
@@ -732,5 +732,36 @@ void main() {
       expect(Self.execute('(| m = ([^42] value. 1) |) m'), 42);
       expect(Self.execute('(| m = ([[^42] value. 2] value. 1) |) m'), 42);
     });
+  });
+
+  test('Factorial example', () {
+    Self.initialize();
+    Self.execute('''
+traits number _AddSlotsIfAbsent:(| 
+  factorial = (
+    self = 0 ifTrue: [^1]. 
+    (self - 1) factorial * self
+  ) 
+|).
+''');
+    expect(Self.send('factorial', [0]), 1);
+    expect(Self.send('factorial', [6]), 720);
+    expect(Self.send('factorial', [25]), 7034535277573963776);
+  });
+
+    test('Fibonacci example', () {
+    Self.initialize();
+    Self.execute('''
+traits number _AddSlotsIfAbsent:(|
+  fibonacci = (
+    self < 3 ifTrue: [^1]. 
+    (self - 1) fibonacci + (self - 2) fibonacci
+  )
+|).
+''');
+    expect(Self.send('fibonacci', [1]), 1);
+    expect(Self.send('fibonacci', [2]), 1);
+    expect(Self.send('fibonacci', [3]), 2);
+    expect(Self.send('fibonacci', [25]), 75025);
   });
 }
