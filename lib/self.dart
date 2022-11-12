@@ -1018,7 +1018,7 @@ class Self {
 
   static SelfObject lobby = SelfObject([]);
 
-  static Map<String, Function> primitives = {};
+  static Map<String, SelfValue Function(List<SelfValue> a)> primitives = {};
 
   /**
    * Bootstraps the runtime system.
@@ -1056,37 +1056,39 @@ class Self {
     ]);
     lobby.slots[0].value = lobby;
 
-    primitives = <String, SelfValue Function(List<dynamic> a)>{
+    primitives = <String, SelfValue Function(List<SelfValue> a)>{
       '_AddSlotsIfAbsent:': (a) {
-        var r = a[0];
-        a[1].slots.forEach((Slot slot) => r.addSlotIfAbsent(slot));
+        var r = a[0] as SelfObject;
+        for (final slot in (a[1] as SelfObject).slots) {
+          r.addSlotIfAbsent(slot);
+        }
         return r;
       },
       '_Clone': (a) => (a[0] as SelfObject).clone(),
       '_NumToString': (a) => '${a[0]}',
-      '_NumAdd:': (a) => a[0] + a[1],
-      '_NumSub:': (a) => a[0] - a[1],
-      '_NumMul:': (a) => a[0] * a[1],
-      '_NumDiv:': (a) => a[0] / a[1],
-      '_NumMod:': (a) => a[0] % a[1],
+      '_NumAdd:': (a) => (a[0] as num) + (a[1] as num),
+      '_NumSub:': (a) => (a[0] as num) - (a[1] as num),
+      '_NumMul:': (a) => (a[0] as num) * (a[1] as num),
+      '_NumDiv:': (a) => (a[0] as num) / (a[1] as num),
+      '_NumMod:': (a) => (a[0] as num) % (a[1] as num),
       '_Equal:': (a) => a[0] == a[1] ? trueObject : falseObject,
-      '_NumLt:': (a) => a[0] < a[1] ? trueObject : falseObject,
-      '_StringSize': (a) => a[0].length,
-      '_StringAt:': (a) => a[0][a[1]],
-      '_StringConcat:': (a) => a[0] + a[1],
-      '_StringFrom:To:': (a) => a[0].substring(a[1], a[2]),
+      '_NumLt:': (a) => (a[0] as num) < (a[1] as num) ? trueObject : falseObject,
+      '_StringSize': (a) => (a[0] as String).length,
+      '_StringAt:': (a) => (a[0] as String)[a[1] as int],
+      '_StringConcat:': (a) => (a[0] as String) + (a[1] as String),
+      '_StringFrom:To:': (a) => (a[0] as String).substring(a[1] as int, a[2] as int),
       '_VectorClone:': (a) => List<SelfValue>.filled(a[1] as int, nilObject, growable: true),
-      '_VectorSize': (a) => a[0].length,
+      '_VectorSize': (a) => (a[0] as List<SelfValue>).length,
       '_VectorAdd:': (a) {
-        a[0].add(a[1]);
+        (a[0] as List<SelfValue>).add(a[1]);
         return a[1];
       },
-      '_VectorAt:': (a) => a[0][a[1]],
+      '_VectorAt:': (a) => (a[0] as List<SelfValue>)[a[1] as int],
       '_VectorAt:Put:': (a) {
-        a[0][a[1]] = a[2];
+        (a[0] as List<SelfValue>)[a[1] as int] = a[2];
         return a[2];
       },
-      '_VectorFrom:To:': (a) => a[0].sublist(a[1], a[2]),
+      '_VectorFrom:To:': (a) => (a[0] as List<SelfValue>).sublist(a[1] as int, a[2] as int),
     };
 
     // now do the rest of the initialization using Self

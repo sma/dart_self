@@ -112,9 +112,9 @@ void main() {
     });
 
     test('Send a primitive message', () {
-      Self.primitives = <String, SelfValue Function(List<dynamic>)>{
-        '_Add:': (a) => a[0] + a[1],
-        '_Sub:': (a) => a[0] - a[1],
+      Self.primitives = {
+        '_Add:': (a) => (a[0] as int) + (a[1] as int),
+        '_Sub:': (a) => (a[0] as int) - (a[1] as int),
       };
       expect(
           SelfMethod([], [
@@ -749,7 +749,7 @@ traits number _AddSlotsIfAbsent:(|
     expect(Self.send('factorial', [25]), 7034535277573963776);
   });
 
-    test('Fibonacci example', () {
+  test('Fibonacci example', () {
     Self.initialize();
     Self.execute('''
 traits number _AddSlotsIfAbsent:(|
