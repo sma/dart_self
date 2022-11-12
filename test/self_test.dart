@@ -500,6 +500,10 @@ void main() {
   group('Runtime:', () {
     setUp(Self.initialize);
 
+    test('Sending a message', () {
+      expect(Self.send('lobby', [Self.lobby]), same(Self.lobby));
+    });
+
     test('Accessing the lobby', () {
       expect(Self.execute('lobby'), same(Self.lobby));
       expect(Self.execute('(|x = lobby|) x'), same(Self.lobby));
@@ -536,12 +540,27 @@ void main() {
       expect(Self.execute('traits vector'), same(Self.traitsVector));
     });
 
+    test('Cloning', () {
+      expect(Self.execute('nil clone'), same(Self.nilObject));
+      expect(Self.execute('true clone'), same(Self.trueObject));
+      expect(Self.execute('false clone'), same(Self.falseObject));
+      expect(Self.execute('42 clone'), 42);
+      expect(Self.execute('-47.11 clone'), -47.11);
+      expect(Self.execute("'42' clone"), '42');
+      expect(Self.execute("traits vector clone"), isNot(same(Self.traitsVector)));
+      expect(Self.execute("traits vector clone"), <SelfValue>[]);
+      expect(Self.execute("traits vector clone: 2"), <SelfValue>[nil, nil]);
+      expect(Self.execute("(| |) _Clone"), isA<SelfObject>());
+      // TODO expect(Self.execute("() _Clone"), isA<SelfMethod>());
+    });
+
     test('Arithmetic operations on numbers', () {
       expect(Self.execute('3 + 4'), 7);
       expect(Self.execute('4 - 3'), 1);
       expect(Self.execute('2 * 3'), 6);
       expect(Self.execute('1 / 2'), 0.5);
       expect(Self.execute('9 % 5'), 4);
+      expect(Self.execute('3 negate'), -3);
     });
 
     test('Relational operations on numbers', () {
@@ -572,6 +591,20 @@ void main() {
       expect(Self.execute('1 + (2 * 3)'), 7.0);
       expect(Self.execute('(1 + 2) * (3 - 4)'), -3);
       expect(Self.execute('((1 + 2) * (3 - 4))'), -3);
+    });
+
+    test('Compare operations on strings', () {
+      expect(Self.execute("'3' = '4'"), Self.falseObject);
+      expect(Self.execute("'4' = '4'"), Self.trueObject);
+      expect(Self.execute("'3' != '4'"), Self.trueObject);
+      expect(Self.execute("'4' != '4'"), Self.falseObject);
+    });
+
+    test('Other perations on strings', () {
+      expect(Self.execute("'abc' size"), 3);
+      expect(Self.execute("'abc' at: 1"), 'b');
+      expect(Self.execute("'ab' , 'c'"), 'abc');
+      expect(Self.execute("'abc' from: 1 To: 2"), 'b');
     });
 
     group('Blocks:', () {
@@ -660,6 +693,10 @@ void main() {
             Self.execute(
                 '(| parent* = lobby. v <- traits vector clone: 2. m = (v at: 0 Put: true. v at: 1 Put: false. v) |) m'),
             <SelfObject>[Self.trueObject, Self.falseObject]);
+      });
+
+      test('from/to', () {
+        expect( Self.execute('(traits vector clone: 3) from: 1 To: 1'), <SelfObject>[]);
       });
     });
 

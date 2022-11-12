@@ -1095,6 +1095,7 @@ class Self {
         parent* = lobby.
         clone = (self).
         printString = (self _NumToString).
+        negate = (0 - self).
         + n = (self _NumAdd: n).
         - n = (self _NumSub: n).
         * n = (self _NumMul: n).
@@ -1148,6 +1149,9 @@ class Self {
         size = (self _StringSize).
         at: index = (self _StringAt: index).
         , other = (self _StringConcat: other).
+        from: start To: end = (self _StringFrom: start To: end).
+        = other = (self _Equal: other).
+        != other = ((self = other) not).
       |).
       traits vector _AddSlotsIfAbsent: (|
         parent* = lobby.
@@ -1180,6 +1184,11 @@ class Self {
     return Parser(source).parse().execute();
   }
 
+  /**
+   * Sends message [name] to the receiver object at the first position in
+   * [arguments], passing the remaining elements as [arguments]. This
+   * must match the arity of the selector [name].
+   */
   static SelfValue send(String name, List<SelfValue> arguments) {
     final value = findSlot(arguments[0], name).value;
     if (value is SelfMethod) return value.activate(arguments);
