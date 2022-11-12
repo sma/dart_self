@@ -45,6 +45,50 @@ void main() {
       expect(obj1.slots[0].value, 1);
       expect(obj1.slots[1].value, 2);
     });
+
+    test('Add a slot', () {
+      var obj = SelfObject([]);
+      obj.addSlotIfAbsent(Slot.c('a', nil));
+      expect(obj.slots.length, 1);
+      expect(obj.slots[0].name, 'a');
+    });
+
+    test('Add a data slot', () {
+      var obj = SelfObject([]);
+      obj.addSlotIfAbsent(Slot.d('a', nil));
+      expect(obj.slots.length, 2);
+      expect(obj.slots[0].name, 'a');
+      expect(obj.slots[1].name, 'a:');
+    });
+
+    test('Remove a slot', () {
+      var obj = SelfObject([Slot.c('x', 1)]);
+      obj.removeSlotNamed('x');
+      expect(obj.slots.length, 0);
+    });
+
+    test('Remove a data slot', () {
+      var obj = SelfObject([Slot.c('x', 1), Slot.m('x')]);
+      obj.removeSlotNamed('x');
+      expect(obj.slots.length, 0);
+    });
+
+    test('Printstring', () {
+      expect(SelfObject([]).toString(), '(|  |)');
+      expect(
+        SelfObject([
+          Slot.c('a', 0),
+          Slot.c('b', 0, parent: true),
+          Slot.d('c', 0),
+          Slot.m('c'),
+          Slot.d('d', 0, parent: true),
+          Slot.m('d'),
+          Slot.a('e', 0),
+          Slot.a('f', 0, parent: true),
+        ]).toString(),
+        '(| a. b*. c<-. c:. d*<-. d:. :e. :f* |)',
+      );
+    });
   });
 
   group('Self method:', () {
@@ -82,6 +126,10 @@ void main() {
             Msg(Lit(4), '_Sub:', [Lit(3)])
           ]).execute(),
           1);
+    });
+
+    test('Printstring', () {
+      expect(SelfMethod([], []).toString(), '(|  |  )');
     });
   });
 
