@@ -1,0 +1,12 @@
+name: self
+description: An interpreter for the Self programming language
+version: 1.0.0
+repository: https://github.com/sma/dart_self
+
+environment:
+  sdk: '>=2.19.0-0 <3.0.0'
+
+dev_dependencies:
+  lints: ^2.0.1
+  test: ^1.22.0
+  coverage: ^1.6.1

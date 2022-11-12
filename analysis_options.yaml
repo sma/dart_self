@@ -1,0 +1,13 @@
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    slash_for_doc_comments: false
+
+analyzer:
+  errors:
+    todo: ignore
+  language:
+    #strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
