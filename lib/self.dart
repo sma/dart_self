@@ -640,31 +640,30 @@ enum _T { end, num, str, nam, op, kw, lp, rp, bar, col, dot, lbr, rbr, ret }
  */
 class Parser {
   /// Creates a list of tokens from the [source].
-  static List<_Token> _tokenize(String source) {
-    List<_Token> tokens = [];
+  static Iterable<_Token> _tokenize(String source) sync* {
     const kTOKEN = r"(-?\d+(?:\.\d+)?)|"
         r"'((?:\\[bfnrtu\']|[^'])*)'|"
         r"(\w+:?)|([-+*/%!=<>~&|,]+)|"
         r'([()|:.[\]^])|"[^"]*"|\s+';
     for (Match m in RegExp(kTOKEN).allMatches(source)) {
       if (m[1] != null) {
-        tokens.add(_Token(_T.num, m[1]!, m.start));
+        yield _Token(_T.num, m[1]!, m.start);
       } else if (m[2] != null) {
-        tokens.add(_Token(_T.str, _unescape(m[2]!), m.start));
+        yield _Token(_T.str, _unescape(m[2]!), m.start);
       } else if (m[3] != null) {
-        tokens.add(_Token(m[3]!.endsWith(":") ? _T.kw : _T.nam, m[3]!, m.start));
+        yield _Token(m[3]!.endsWith(":") ? _T.kw : _T.nam, m[3]!, m.start);
       } else if (m[4] != null) {
         if (m[4] == '|') {
-          tokens.add(_Token(_T.bar, m[4]!, m.start));
+          yield _Token(_T.bar, m[4]!, m.start);
         } else {
-          tokens.add(_Token(_T.op, m[4]!, m.start));
+          yield _Token(_T.op, m[4]!, m.start);
         }
       } else if (m[5] != null) {
         const ts = [_T.lp, _T.rp, _T.bar, _T.col, _T.dot, _T.lbr, _T.rbr, _T.ret];
-        tokens.add(_Token(ts['()|:.[]^'.indexOf(m[5]!)], m[5]!, m.start));
+        yield _Token(ts['()|:.[]^'.indexOf(m[5]!)], m[5]!, m.start);
       }
     }
-    return tokens..add(_Token(_T.end, '', source.length));
+    yield _Token(_T.end, '', source.length);
   }
 
   /// Returns a new string with the usual string escape sequences replaced.
@@ -698,7 +697,7 @@ class Parser {
 
   /// Constructs a new parser to parse [source].
   Parser(this.self, String source)
-      : _tokens = _tokenize(source),
+      : _tokens = _tokenize(source).toList(),
         index = 0;
 
   /// Returns the type of the current token.
