@@ -133,6 +133,15 @@ void main() {
       a.slots[0].value = obj2;
       expect(Msg(Msg(null, 'o', []), 'a', []).execute(a), 1);
     });
+
+    test('Unknown primitive message send', () {
+      expect(() => Msg(null, '_Qux', []).execute(nil), throwsA('UnknownPrimitive(_Qux)'));
+    });
+
+    test('Missing mutator message send', () {
+      var a = SelfObject([Slot.m('a')]);
+      expect(() => Msg(null, 'a:', [Lit(nil)]).execute(a), throwsA('MutatorWithoutDataSlot(a:)'));
+    });
   });
 
   group('Parser:', () {
