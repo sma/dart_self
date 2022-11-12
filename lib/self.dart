@@ -300,7 +300,7 @@ class Slot {
   final int kind; // CONST = 0, DATA = 1, ARGUMENT = 2, PARENT = 4
   SelfValue value;
 
-  bool get constant => (kind & 3) == 0;
+  bool get constant => (kind & 3) == 0; // coverage:ignore-line
   bool get data => (kind & 3) == 1;
   bool get argument => (kind & 3) == 2;
   bool get parent => (kind & 4) != 0;
@@ -581,8 +581,10 @@ class _Token {
 
   _Token(this.type, this.value, this.pos);
 
+  // coverage:ignore-start
   @override
   String toString() => "{$type $value}";
+  // coverage:ignore-end
 }
 
 /// Token types - conceptually belonging to [_Token].
