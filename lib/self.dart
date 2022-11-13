@@ -1125,6 +1125,8 @@ class Self {
         <= n = ((self > n) not).
         >= n = ((self < n) not).
         != n = ((self = n) not).
+        to: end Do: block = (self to: end By: 1 Do: block).
+        to: end By: step Do: block = (|i| i: self. [i <= end] whileTrue: [block value: i. i: i + step]).
       |).
       nil _AddSlotsIfAbsent: (|
         parent* = lobby.

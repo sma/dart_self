@@ -740,6 +740,10 @@ void main() {
           [4, 5]);
     });
 
+    test('For loop', () {
+      expect( self.execute('(| m = (|sum<-0| 1 to: 10 Do: [|:i| sum: sum + i]. sum) |) m'), 55);
+    });
+
     test('Non-local return', () {
       expect(self.execute('(| m = ([^42] value. 1) |) m'), 42);
       expect(self.execute('(| m = ([[^42] value. 2] value. 1) |) m'), 42);
