@@ -591,14 +591,14 @@ class _Token {
 }
 
 /// Token types - conceptually belonging to [_Token].
-enum _T { end, num, str, nam, op, kw, lp, rp, col, dot, lbr, rbr, ret }
+enum _T { end, num, str, nam, op, kw1, kw2, lp, rp, col, dot, lbr, rbr, ret }
 
 /**
  * Parses Self source code into object literals or message expressions.
  *
  * Grammar:
  * 
- *     program = message {"."} message ["."]
+ *     program = message {"." message} ["."]
  *     body = program ["^" message] ["."]
  *     message = binaryMessage {KEYWORD binaryMessage}
  *     binaryMessage = unaryMessage {OPERATOR unaryMessage}
@@ -654,7 +654,13 @@ class Parser {
       } else if (m[2] != null) {
         yield _Token(_T.str, _unescape(m[2]!), m.start);
       } else if (m[3] != null) {
-        yield _Token(m[3]!.endsWith(':') ? _T.kw : _T.nam, m[3]!, m.start);
+        _T type; 
+        if (m[3]!.endsWith(':')) {
+          type = m[3]!.startsWith(RegExp('[A-Z]')) ? _T.kw2 : _T.kw1;
+        } else {
+          type = _T.nam;
+        }
+        yield _Token(type, m[3]!, m.start);
       } else if (m[4] != null) {
         yield _Token(_T.op, m[4]!, m.start);
       } else if (m[5] != null) {
@@ -722,7 +728,7 @@ class Parser {
         throw syntaxError('End of input expected');
       }
     }
-    return SelfMethod([Slot.a('lobby', self.lobby, parent: true)], codes);
+    return SelfMethod([Slot.a('self', self.lobby, parent: true)], codes);
   }
 
   /// Returns a literal (a number, string or object) parsed from the source.
@@ -858,14 +864,14 @@ class Parser {
         // inline argument
         args.add(value());
       }
-    } else if (_type == _T.kw) {
+    } else if (_type == _T.kw1) {
       // keyword selector
       name = value();
       if (_type == _T.nam) {
         // inline argument
         args.add(value());
       }
-      while (_type == _T.kw) {
+      while (_type == _T.kw2) {
         name += value();
         if (_type == _T.nam) {
           if (args.isEmpty) {
@@ -948,13 +954,12 @@ class Parser {
   /// Returns the next message parsed from the source.
   Code parseMessage() {
     var m = parseBinaryMessage();
-    if (_type == _T.kw) {
-      var name = '';
-      final args = <Code>[];
-      while (_type == _T.kw /*&& _tokens[index].value[0].hasMatch(new RegExp("A-Z"))*/) {
-        // TODO
+    if (_type == _T.kw1) {
+      var name = value();
+      final args = [parseMessage()];
+      while (_type == _T.kw2) {
         name += value();
-        args.add(parseBinaryMessage()!); // TODO !
+        args.add(parseMessage());
       }
       m = Msg(m, name, args);
     } else if (m == null) {

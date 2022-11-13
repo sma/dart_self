@@ -411,6 +411,10 @@ void main() {
         test('Multiple keywords', () {
           expect(Parser(self, 'a: 1 B: 2 C: 3').parseMessage().toString(), '{a:B:C: null 1 2 3}');
         });
+
+        test('Chained keywords', () {
+          expect(Parser(self, 'a: b: c: 1').parseMessage().toString(), '{a: null {b: null {c: null 1}}}');
+        });
       });
 
       group('Explicit:', () {
@@ -434,6 +438,10 @@ void main() {
 
         test('Multiple keywords', () {
           expect(Parser(self, '1 a: 2 B: 3 C: 4').parseMessage().toString(), '{a:B:C: 1 2 3 4}');
+        });
+
+        test('Chained keywords', () {
+          expect(Parser(self, '1 a: b: 2 C: 3').parseMessage().toString(), '{a: 1 {b:C: null 2 3}}');
         });
       });
 
@@ -654,7 +662,7 @@ void main() {
       expect(self.execute('(| m: = (|:a| a) |) m: 3'), 3);
       expect(self.execute('(| m: = (|:self*. :a| a) |) m: 1+2'), 3);
 
-      expect(self.execute('(| m: a n: b = (a + b) |) m: 3 n: 4'), 7);
+      expect(self.execute('(| m: a N: b = (a + b) |) m: 3 N: 4'), 7);
     });
 
     test('Return a local slot', () {
@@ -741,7 +749,7 @@ void main() {
     });
 
     test('For loop', () {
-      expect( self.execute('(| m = (|sum<-0| 1 to: 10 Do: [|:i| sum: sum + i]. sum) |) m'), 55);
+      expect(self.execute('(| m = (|sum<-0| 1 to: 10 Do: [|:i| sum: sum + i]. sum) |) m'), 55);
     });
 
     test('Non-local return', () {
