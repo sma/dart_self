@@ -244,7 +244,7 @@ class SelfMethod extends SelfObject {
    * the first slot and all other arguments must be the adjacent slots.
    */
   SelfValue activate(Self self, List<SelfValue> arguments) {
-    SelfMethod activation = clone();
+    final activation = clone();
     arguments.asMap().forEach((i, a) {
       activation.slots[i].value = a;
     });
@@ -714,7 +714,7 @@ class Parser {
 
   /// Converts the source code into a global Self method.
   SelfMethod parse() {
-    var codes = <Code>[];
+    final codes = <Code>[];
     while (_type != _T.end) {
       codes.add(parseMessage());
       if (_type == _T.dot) {
@@ -748,8 +748,8 @@ class Parser {
   /// The current token must be `(`.
   SelfObject parseObject() {
     index++; // skip (
-    var slots = _type == _T.bar ? parseSlots() : <Slot>[];
-    var codes = <Code>[];
+    final slots = _type == _T.bar ? parseSlots() : <Slot>[];
+    final codes = <Code>[];
     while (_type != _T.rp) {
       codes.add(parseMessage());
       if (_type == _T.dot) {
@@ -766,8 +766,8 @@ class Parser {
   /// The current token must be `[`.
   SelfObject parseBlock() {
     index++; // skip [
-    var slots = _type == _T.bar ? parseSlots() : <Slot>[];
-    var codes = <Code>[];
+    final slots = _type == _T.bar ? parseSlots() : <Slot>[];
+    final codes = <Code>[];
     while (_type != _T.rbr) {
       if (_type == _T.ret) {
         index++; // skip ^
@@ -815,9 +815,9 @@ class Parser {
   /// The current token must be `|`.
   List<Slot> parseSlots() {
     index++; // skip |
-    var slots = <Slot>[];
+    final slots = <Slot>[];
     while (_type != _T.bar) {
-      Slot slot = parseSlot();
+      final slot = parseSlot();
       slots.add(slot);
       if (slot.data) {
         slots.add(Slot.m(slot.name));
@@ -846,7 +846,7 @@ class Parser {
     // name is either an unary selector, binary selector or at least one keyword selector;
     // binary selectors and keyword selectors may have inline arguments which are names
     String name;
-    List<String> args = [];
+    final args = <String>[];
     if (_type == _T.nam) {
       // unary selector
       name = value();
@@ -949,7 +949,7 @@ class Parser {
     Code? m = parseBinaryMessage();
     if (_type == _T.kw) {
       String name = "";
-      List<Code> args = [];
+      final args = <Code>[];
       while (_type == _T.kw /*&& _tokens[index].value[0].hasMatch(new RegExp("A-Z"))*/) {
         // TODO
         name += value();
@@ -974,7 +974,7 @@ class Parser {
     Code? m;
     if (_type == _T.num || _type == _T.str || _type == _T.lp) {
       // explicit receiver
-      var v = parseLiteral();
+      final v = parseLiteral();
       m = Lit(v);
       if (v is SelfMethod) {
         m = Mth(m as Lit);
@@ -1056,12 +1056,12 @@ class Self {
     primitives.clear();
 
     // define everything
-    SelfObject globals = SelfObject([
+    final globals = SelfObject([
       Slot.c('nil', nilObject),
       Slot.c('true', trueObject),
       Slot.c('false', falseObject),
     ]);
-    SelfObject traits = SelfObject([
+    final traits = SelfObject([
       Slot.c('number', traitsNumber),
       Slot.c('string', traitsString),
       Slot.c('vector', traitsVector),
@@ -1075,7 +1075,7 @@ class Self {
 
     primitives.addAll({
       '_AddSlotsIfAbsent:': (a) {
-        var r = a[0] as SelfObject;
+        final r = a[0] as SelfObject;
         for (final slot in (a[1] as SelfObject).slots) {
           r.addSlotIfAbsent(slot);
         }
@@ -1220,7 +1220,7 @@ class Self {
    * Throws a runtime exception if there is more than one such slot.
    */
   Slot findSlot(SelfValue obj, String name) {
-    Slot? slot = _findSlot(obj, name, {});
+    final slot = _findSlot(obj, name, {});
     if (slot == null) {
       throw "UnknownMessageSend($name)";
     }
@@ -1240,7 +1240,7 @@ class Self {
       Slot? foundSlot;
       for (Slot slot in slots) {
         if (slot.parent) {
-          Slot? s = _findSlot(slot.value, name, visited);
+          final s = _findSlot(slot.value, name, visited);
           if (s != null) {
             if (foundSlot != null) {
               throw "AmbiguousMessageSend($name)";

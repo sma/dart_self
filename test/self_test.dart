@@ -9,38 +9,38 @@ void main() {
 
   group('Self object:', () {
     test('Access a slot value', () {
-      var obj = SelfObject([Slot.c('a', 1)]);
+      final obj = SelfObject([Slot.c('a', 1)]);
       expect(self.findSlot(obj, 'a').value, 1);
     });
 
     test('Access a slot value in parent object', () {
-      var obj1 = SelfObject([Slot.c('a', 1)]);
-      var obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
+      final obj1 = SelfObject([Slot.c('a', 1)]);
+      final obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
       expect(self.findSlot(obj2, 'a').value, 1);
     });
 
     test('Access a slot value in parent object without endless loop', () {
-      var obj1 = SelfObject([Slot.c('b', nil, parent: true), Slot.c('a', 1)]);
-      var obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
+      final obj1 = SelfObject([Slot.c('b', nil, parent: true), Slot.c('a', 1)]);
+      final obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
       obj1.slots[0].value = obj2;
       expect(self.findSlot(obj2, 'a').value, 1);
     });
 
     test('Access an unknown slot value', () {
-      var obj = SelfObject([Slot.c('a', 1)]);
+      final obj = SelfObject([Slot.c('a', 1)]);
       expect(() => self.findSlot(obj, 'b'), throwsA('UnknownMessageSend(b)'));
     });
 
     test('Access an ambiguous slot value', () {
-      var obj1 = SelfObject([Slot.c('a', 1)]);
-      var obj2 = SelfObject([Slot.c('a', 2)]);
-      var obj3 = SelfObject([Slot.c('p1', obj1, parent: true), Slot.c('p2', obj2, parent: true)]);
+      final obj1 = SelfObject([Slot.c('a', 1)]);
+      final obj2 = SelfObject([Slot.c('a', 2)]);
+      final obj3 = SelfObject([Slot.c('p1', obj1, parent: true), Slot.c('p2', obj2, parent: true)]);
       expect(() => self.findSlot(obj3, 'a'), throwsA('AmbiguousMessageSend(a)'));
     });
 
     test('Cloning an object', () {
-      var obj1 = SelfObject([Slot.a("a", 1), Slot.d("b", 2)]);
-      var obj2 = obj1.clone();
+      final obj1 = SelfObject([Slot.a("a", 1), Slot.d("b", 2)]);
+      final obj2 = obj1.clone();
       obj2.slots[0].value = 3;
       obj2.slots[1].value = 4;
       expect(obj1.slots[0].value, 1);
@@ -48,14 +48,14 @@ void main() {
     });
 
     test('Add a slot', () {
-      var obj = SelfObject([]);
+      final obj = SelfObject([]);
       obj.addSlotIfAbsent(Slot.c('a', nil));
       expect(obj.slots.length, 1);
       expect(obj.slots[0].name, 'a');
     });
 
     test('Add a data slot', () {
-      var obj = SelfObject([]);
+      final obj = SelfObject([]);
       obj.addSlotIfAbsent(Slot.d('a', nil));
       expect(obj.slots.length, 2);
       expect(obj.slots[0].name, 'a');
@@ -63,13 +63,13 @@ void main() {
     });
 
     test('Remove a slot', () {
-      var obj = SelfObject([Slot.c('x', 1)]);
+      final obj = SelfObject([Slot.c('x', 1)]);
       obj.removeSlotNamed('x');
       expect(obj.slots.length, 0);
     });
 
     test('Remove a data slot', () {
-      var obj = SelfObject([Slot.c('x', 1), Slot.m('x')]);
+      final obj = SelfObject([Slot.c('x', 1), Slot.m('x')]);
       obj.removeSlotNamed('x');
       expect(obj.slots.length, 0);
     });
@@ -107,8 +107,8 @@ void main() {
     });
 
     test('Access an instance slot', () {
-      var inst = SelfObject([Slot.c('b', 2)]);
-      var meth = SelfMethod([Slot.c('self', inst, parent: true), Slot.c('a', 1)], [Msg(null, 'b', [])]);
+      final inst = SelfObject([Slot.c('b', 2)]);
+      final meth = SelfMethod([Slot.c('self', inst, parent: true), Slot.c('a', 1)], [Msg(null, 'b', [])]);
       expect(meth.execute(self), 2);
     });
 
@@ -136,49 +136,49 @@ void main() {
 
   group('Code:', () {
     test('Literal objects', () {
-      var a = SelfObject([]);
+      final a = SelfObject([]);
       expect(Lit(1).execute(self, a), 1);
       expect(Lit(1.1).execute(self, a), 1.1);
       expect(Lit('a').execute(self, a), 'a');
       expect(Lit(nil).execute(self, a), nil);
       expect(Lit(true).execute(self, a), true);
       expect(Lit(false).execute(self, a), false);
-      var obj = SelfObject([]);
+      final obj = SelfObject([]);
       expect(Lit(obj).execute(self, a), same(obj));
     });
 
     test('Literal methods', () {
-      var a = SelfObject([]);
-      var meth = SelfMethod([], [Lit(1)]);
+      final a = SelfObject([]);
+      final meth = SelfMethod([], [Lit(1)]);
       expect(Mth(Lit(meth)).execute(self, a), 1);
     });
 
     test('Literal blocks', () {
-      var a = SelfObject([]);
-      var m = SelfMethod([Slot.a("(parent)", nil, parent: true)], [Lit(1)]);
-      var b = SelfObject(
+      final a = SelfObject([]);
+      final m = SelfMethod([Slot.a("(parent)", nil, parent: true)], [Lit(1)]);
+      final b = SelfObject(
           [Slot.c("parent", self.traitsBlock, parent: true), Slot.a("(lexicalParent)", nil), Slot.c("value", m)]);
-      var rslt = o(Blk(b).execute(self, a));
+      final rslt = o(Blk(b).execute(self, a));
       expect(rslt.slots[0].value, self.traitsBlock);
       expect(rslt.slots[1].value, same(a));
       expect(rslt.slots[2].value, same(m));
     });
 
     test('Implicit message send', () {
-      var a = SelfObject([Slot.d('a', 1), Slot.m('a')]);
+      final a = SelfObject([Slot.d('a', 1), Slot.m('a')]);
       expect(Msg(null, 'a', []).execute(self, a), 1);
-      var b = SelfObject([Slot.c('p', a, parent: true)]);
+      final b = SelfObject([Slot.c('p', a, parent: true)]);
       expect(Msg(null, 'a', []).execute(self, b), 1);
       expect(Msg(null, 'a:', [Lit(2)]).execute(self, b), 2);
       expect(self.findSlot(a, 'a').value, 2);
     });
 
     test('Explicit message send', () {
-      var a = SelfObject([Slot.c('o', nil)]);
-      var obj1 = SelfObject([Slot.c('a', 1)]);
+      final a = SelfObject([Slot.c('o', nil)]);
+      final obj1 = SelfObject([Slot.c('a', 1)]);
       a.slots[0].value = obj1;
       expect(Msg(Msg(null, 'o', []), 'a', []).execute(self, a), 1);
-      var obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
+      final obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
       a.slots[0].value = obj2;
       expect(Msg(Msg(null, 'o', []), 'a', []).execute(self, a), 1);
     });
@@ -188,7 +188,7 @@ void main() {
     });
 
     test('Missing mutator message send', () {
-      var a = SelfObject([Slot.m('a')]);
+      final a = SelfObject([Slot.m('a')]);
       expect(() => Msg(null, 'a:', [Lit(nil)]).execute(self, a), throwsA('MutatorWithoutDataSlot(a:)'));
     });
   });

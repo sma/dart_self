@@ -2,6 +2,7 @@ include: package:lints/recommended.yaml
 
 linter:
   rules:
+    prefer_final_locals: true
     slash_for_doc_comments: false
 
 analyzer:
