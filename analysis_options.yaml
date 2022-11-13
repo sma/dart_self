@@ -3,6 +3,7 @@ include: package:lints/recommended.yaml
 linter:
   rules:
     prefer_final_locals: true
+    prefer_single_quotes: true
     slash_for_doc_comments: false
 
 analyzer:

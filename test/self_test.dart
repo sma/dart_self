@@ -39,7 +39,7 @@ void main() {
     });
 
     test('Cloning an object', () {
-      final obj1 = SelfObject([Slot.a("a", 1), Slot.d("b", 2)]);
+      final obj1 = SelfObject([Slot.a('a', 1), Slot.d('b', 2)]);
       final obj2 = obj1.clone();
       obj2.slots[0].value = 3;
       obj2.slots[1].value = 4;
@@ -155,9 +155,9 @@ void main() {
 
     test('Literal blocks', () {
       final a = SelfObject([]);
-      final m = SelfMethod([Slot.a("(parent)", nil, parent: true)], [Lit(1)]);
+      final m = SelfMethod([Slot.a('(parent)', nil, parent: true)], [Lit(1)]);
       final b = SelfObject(
-          [Slot.c("parent", self.traitsBlock, parent: true), Slot.a("(lexicalParent)", nil), Slot.c("value", m)]);
+          [Slot.c('parent', self.traitsBlock, parent: true), Slot.a('(lexicalParent)', nil), Slot.c('value', m)]);
       final rslt = o(Blk(b).execute(self, a));
       expect(rslt.slots[0].value, self.traitsBlock);
       expect(rslt.slots[1].value, same(a));
@@ -210,27 +210,27 @@ void main() {
 
       group('Objects:', () {
         test('Empty objects', () {
-          expect(o(Parser(self, "()").parseLiteral()).slots, isEmpty);
-          expect(o(Parser(self, "(| |)").parseLiteral()).slots, isEmpty);
+          expect(o(Parser(self, '()').parseLiteral()).slots, isEmpty);
+          expect(o(Parser(self, '(| |)').parseLiteral()).slots, isEmpty);
         });
 
         test('Enumerating slots', () {
-          expect(Parser(self, "(| a |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a. |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a. b |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a. b. |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a = 1 |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a = 1. |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a = 1. b = 2 |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a = 1. b = 2. |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a <- 1 |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a <- 1. |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a <- 1. b <- 2 |)").parseLiteral(), isNotNull);
-          expect(Parser(self, "(| a <- 1. b <- 2. |)").parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a. |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a. b |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a. b. |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a = 1 |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a = 1. |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a = 1. b = 2 |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a = 1. b = 2. |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a <- 1 |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a <- 1. |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a <- 1. b <- 2 |)').parseLiteral(), isNotNull);
+          expect(Parser(self, '(| a <- 1. b <- 2. |)').parseLiteral(), isNotNull);
         });
 
         test('Constant slot', () {
-          final obj = o(Parser(self, "(| ab = 1 |)").parseLiteral());
+          final obj = o(Parser(self, '(| ab = 1 |)').parseLiteral());
           expect(obj.slots[0].name, 'ab');
           expect(obj.slots[0].value, 1);
           expect(obj.slots[0].parent, false);
@@ -239,7 +239,7 @@ void main() {
         });
 
         test('Data slot', () {
-          final obj = o(Parser(self, "(| ab <- 2 |)").parseLiteral());
+          final obj = o(Parser(self, '(| ab <- 2 |)').parseLiteral());
           expect(obj.slots[0].name, 'ab');
           expect(obj.slots[0].value, 2);
           expect(obj.slots[0].parent, false);
@@ -251,7 +251,7 @@ void main() {
         });
 
         test('Empty data slot', () {
-          final obj = o(Parser(self, "(| ab |)").parseLiteral());
+          final obj = o(Parser(self, '(| ab |)').parseLiteral());
           expect(obj.slots[0].name, 'ab');
           expect(obj.slots[0].value, nil);
           expect(obj.slots[0].parent, false);
@@ -263,7 +263,7 @@ void main() {
         });
 
         test('Constant parent slot', () {
-          final obj = o(Parser(self, "(| ab* = 1 |)").parseLiteral());
+          final obj = o(Parser(self, '(| ab* = 1 |)').parseLiteral());
           expect(obj.slots[0].name, 'ab');
           expect(obj.slots[0].value, 1);
           expect(obj.slots[0].parent, true);
@@ -272,7 +272,7 @@ void main() {
         });
 
         test('Data parent slot', () {
-          final obj = o(Parser(self, "(| ab* <- 2 |)").parseLiteral());
+          final obj = o(Parser(self, '(| ab* <- 2 |)').parseLiteral());
           expect(obj.slots[0].name, 'ab');
           expect(obj.slots[0].value, 2);
           expect(obj.slots[0].parent, true);
@@ -284,7 +284,7 @@ void main() {
         });
 
         test('Empty data parent slot', () {
-          final obj = o(Parser(self, "(| ab* |)").parseLiteral());
+          final obj = o(Parser(self, '(| ab* |)').parseLiteral());
           expect(obj.slots[0].name, 'ab');
           expect(obj.slots[0].value, nil);
           expect(obj.slots[0].parent, true);
@@ -296,7 +296,7 @@ void main() {
         });
 
         test('Argument slot', () {
-          final obj = o(Parser(self, "(| :ab |)").parseLiteral());
+          final obj = o(Parser(self, '(| :ab |)').parseLiteral());
           expect(obj.slots[0].name, 'ab');
           expect(obj.slots[0].value, nil);
           expect(obj.slots[0].parent, false);
@@ -306,7 +306,7 @@ void main() {
         });
 
         test('Argument parent slot', () {
-          final obj = o(Parser(self, "(| :ab* |)").parseLiteral());
+          final obj = o(Parser(self, '(| :ab* |)').parseLiteral());
           expect(obj.slots[0].name, 'ab');
           expect(obj.slots[0].value, nil);
           expect(obj.slots[0].parent, true);
@@ -319,37 +319,37 @@ void main() {
           setUp(() => self.initialize());
 
           test('Constant slot', () {
-            final obj = o(Parser(self, "(| ab = true |)").parseLiteral());
+            final obj = o(Parser(self, '(| ab = true |)').parseLiteral());
             expect(obj.slots[0].name, 'ab');
             expect(obj.slots[0].value, same(self.trueObject));
           });
 
           test('Constant slot', () {
-            final obj = o(Parser(self, "(| ab = (3 + 4) + 1 |)").parseLiteral());
+            final obj = o(Parser(self, '(| ab = (3 + 4) + 1 |)').parseLiteral());
             expect(obj.slots[0].name, 'ab');
             expect(obj.slots[0].value, 8);
           });
 
           test('Constant slot', () {
-            final obj = o(Parser(self, "(| ab = (3 + 4) |)").parseLiteral());
+            final obj = o(Parser(self, '(| ab = (3 + 4) |)').parseLiteral());
             expect(obj.slots[0].name, 'ab');
             expect(obj.slots[0].value, isA<SelfMethod>());
           });
 
           test('Data slot', () {
-            final obj = o(Parser(self, "(| ab <- true |)").parseLiteral());
+            final obj = o(Parser(self, '(| ab <- true |)').parseLiteral());
             expect(obj.slots[0].name, 'ab');
             expect(obj.slots[0].value, same(self.trueObject));
           });
 
           test('Data slot', () {
-            final obj = o(Parser(self, "(| ab <- (3 + 4) + 1 |)").parseLiteral());
+            final obj = o(Parser(self, '(| ab <- (3 + 4) + 1 |)').parseLiteral());
             expect(obj.slots[0].name, 'ab');
             expect(obj.slots[0].value, 8);
           });
 
           test('Data slot', () {
-            final obj = o(Parser(self, "(| ab <- (3 + 4) |)").parseLiteral());
+            final obj = o(Parser(self, '(| ab <- (3 + 4) |)').parseLiteral());
             expect(obj.slots[0].name, 'ab');
             expect(obj.slots[0].value, 7);
           });
@@ -358,7 +358,7 @@ void main() {
 
       group('Blocks:', () {
         test('Empty', () {
-          final obj = o(Parser(self, "[]").parseLiteral());
+          final obj = o(Parser(self, '[]').parseLiteral());
           expect(obj.slots[0].name, 'parent');
           expect(obj.slots[0].value, self.traitsBlock);
           expect(obj.slots[0].parent, true);
@@ -368,7 +368,7 @@ void main() {
         });
 
         test('With arguments', () {
-          final obj = o(Parser(self, "[| :a. :b. |]").parseLiteral());
+          final obj = o(Parser(self, '[| :a. :b. |]').parseLiteral());
           expect(obj.slots[0].name, 'parent');
           expect(obj.slots[0].value, self.traitsBlock);
           expect(obj.slots[0].parent, true);
@@ -379,58 +379,58 @@ void main() {
       });
     });
 
-    group("Messages:", () {
-      group("Implicit:", () {
-        test("Single unary", () {
-          expect(Parser(self, "a").parseMessage().toString(), "{a null}");
+    group('Messages:', () {
+      group('Implicit:', () {
+        test('Single unary', () {
+          expect(Parser(self, 'a').parseMessage().toString(), '{a null}');
         });
 
-        test("Chained unary", () {
-          expect(Parser(self, "a b c").parseMessage().toString(), "{c {b {a null}}}");
+        test('Chained unary', () {
+          expect(Parser(self, 'a b c').parseMessage().toString(), '{c {b {a null}}}');
         });
 
-        test("Single binary", () {
-          expect(Parser(self, "<< a").parseMessage().toString(), "{<< null {a null}}");
-          expect(Parser(self, "<< a b").parseMessage().toString(), "{<< null {b {a null}}}");
+        test('Single binary', () {
+          expect(Parser(self, '<< a').parseMessage().toString(), '{<< null {a null}}');
+          expect(Parser(self, '<< a b').parseMessage().toString(), '{<< null {b {a null}}}');
         });
 
-        test("Chained binary", () {
-          expect(Parser(self, "<< a << b").parseMessage().toString(), "{<< {<< null {a null}} {b null}}");
-          expect(Parser(self, "<< a b << b c").parseMessage().toString(), "{<< {<< null {b {a null}}} {c {b null}}}");
+        test('Chained binary', () {
+          expect(Parser(self, '<< a << b').parseMessage().toString(), '{<< {<< null {a null}} {b null}}');
+          expect(Parser(self, '<< a b << b c').parseMessage().toString(), '{<< {<< null {b {a null}}} {c {b null}}}');
         });
 
-        test("Single keyword", () {
-          expect(Parser(self, "a: 1").parseMessage().toString(), "{a: null 1}");
-          expect(Parser(self, "a: << 1").parseMessage().toString(), "{a: null {<< null 1}}");
-          expect(Parser(self, "a: 1 a").parseMessage().toString(), "{a: null {a 1}}");
+        test('Single keyword', () {
+          expect(Parser(self, 'a: 1').parseMessage().toString(), '{a: null 1}');
+          expect(Parser(self, 'a: << 1').parseMessage().toString(), '{a: null {<< null 1}}');
+          expect(Parser(self, 'a: 1 a').parseMessage().toString(), '{a: null {a 1}}');
         });
 
-        test("Multiple keywords", () {
-          expect(Parser(self, "a: 1 B: 2 C: 3").parseMessage().toString(), "{a:B:C: null 1 2 3}");
+        test('Multiple keywords', () {
+          expect(Parser(self, 'a: 1 B: 2 C: 3').parseMessage().toString(), '{a:B:C: null 1 2 3}');
         });
       });
 
-      group("Explicit:", () {
-        test("Single unary", () {
-          expect(Parser(self, "1 negate").parseMessage().toString(), "{negate 1}");
+      group('Explicit:', () {
+        test('Single unary', () {
+          expect(Parser(self, '1 negate').parseMessage().toString(), '{negate 1}');
         });
 
-        test("Single binary", () {
-          expect(Parser(self, "1 + 2").parseMessage().toString(), "{+ 1 2}");
+        test('Single binary', () {
+          expect(Parser(self, '1 + 2').parseMessage().toString(), '{+ 1 2}');
         });
 
-        test("Chained binary", () {
-          expect(Parser(self, "1 + 2 + 3").parseMessage().toString(), "{+ {+ 1 2} 3}");
+        test('Chained binary', () {
+          expect(Parser(self, '1 + 2 + 3').parseMessage().toString(), '{+ {+ 1 2} 3}');
         });
 
-        test("Single keyword", () {
-          expect(Parser(self, "1 ab: 2").parseMessage().toString(), "{ab: 1 2}");
-          expect(Parser(self, "1 ab: 2+3").parseMessage().toString(), "{ab: 1 {+ 2 3}}");
-          expect(Parser(self, "1 ab: 2 a").parseMessage().toString(), "{ab: 1 {a 2}}");
+        test('Single keyword', () {
+          expect(Parser(self, '1 ab: 2').parseMessage().toString(), '{ab: 1 2}');
+          expect(Parser(self, '1 ab: 2+3').parseMessage().toString(), '{ab: 1 {+ 2 3}}');
+          expect(Parser(self, '1 ab: 2 a').parseMessage().toString(), '{ab: 1 {a 2}}');
         });
 
-        test("Multiple keywords", () {
-          expect(Parser(self, "1 a: 2 B: 3 C: 4").parseMessage().toString(), "{a:B:C: 1 2 3 4}");
+        test('Multiple keywords', () {
+          expect(Parser(self, '1 a: 2 B: 3 C: 4').parseMessage().toString(), '{a:B:C: 1 2 3 4}');
         });
       });
 
@@ -440,60 +440,60 @@ void main() {
       });
     });
 
-    group("Errors:", () {
+    group('Errors:', () {
       final throwsSyntaxError = throwsA(startsWith('SyntaxError:'));
 
-      test("Garbage at the end", () {
-        expect(() => Parser(self, "1 2").parse(), throwsSyntaxError);
+      test('Garbage at the end', () {
+        expect(() => Parser(self, '1 2').parse(), throwsSyntaxError);
       });
-      test("Not a literal", () {
-        expect(() => Parser(self, "").parseLiteral(), throwsSyntaxError);
-        expect(() => Parser(self, "foo").parseLiteral(), throwsSyntaxError);
-        expect(() => Parser(self, "+ bar").parseLiteral(), throwsSyntaxError);
-        expect(() => Parser(self, "foo: 1").parseLiteral(), throwsSyntaxError);
-        expect(() => Parser(self, "|").parseLiteral(), throwsSyntaxError);
-        expect(() => Parser(self, ":").parseLiteral(), throwsSyntaxError);
-        expect(() => Parser(self, ".").parseLiteral(), throwsSyntaxError);
-        expect(() => Parser(self, "^").parseLiteral(), throwsSyntaxError);
+      test('Not a literal', () {
+        expect(() => Parser(self, '').parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(self, 'foo').parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(self, '+ bar').parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(self, 'foo: 1').parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(self, '|').parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(self, ':').parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(self, '.').parseLiteral(), throwsSyntaxError);
+        expect(() => Parser(self, '^').parseLiteral(), throwsSyntaxError);
       });
-      test("Missing ) in object", () {
-        expect(() => Parser(self, "(").parseObject(), throwsSyntaxError);
-        expect(() => Parser(self, "(a").parseObject(), throwsSyntaxError);
-        expect(() => Parser(self, "(|a|").parseObject(), throwsSyntaxError);
-        expect(() => Parser(self, "(|a| b").parseObject(), throwsSyntaxError);
+      test('Missing ) in object', () {
+        expect(() => Parser(self, '(').parseObject(), throwsSyntaxError);
+        expect(() => Parser(self, '(a').parseObject(), throwsSyntaxError);
+        expect(() => Parser(self, '(|a|').parseObject(), throwsSyntaxError);
+        expect(() => Parser(self, '(|a| b').parseObject(), throwsSyntaxError);
       });
-      test("Missing ] in block", () {
-        expect(() => Parser(self, "[").parseBlock(), throwsSyntaxError);
-        expect(() => Parser(self, "[a").parseBlock(), throwsSyntaxError);
-        expect(() => Parser(self, "[|a|").parseBlock(), throwsSyntaxError);
-        expect(() => Parser(self, "[|a| b").parseBlock(), throwsSyntaxError);
-        expect(() => Parser(self, "[^1.").parseBlock(), throwsSyntaxError);
+      test('Missing ] in block', () {
+        expect(() => Parser(self, '[').parseBlock(), throwsSyntaxError);
+        expect(() => Parser(self, '[a').parseBlock(), throwsSyntaxError);
+        expect(() => Parser(self, '[|a|').parseBlock(), throwsSyntaxError);
+        expect(() => Parser(self, '[|a| b').parseBlock(), throwsSyntaxError);
+        expect(() => Parser(self, '[^1.').parseBlock(), throwsSyntaxError);
       });
-      test("Missing | in slots", () {
-        expect(() => Parser(self, "(|").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|a").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|a.").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|a. b = 1").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "[|").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "[|a").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "[|a.").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "[|a. b = 1").parse(), throwsSyntaxError);
+      test('Missing | in slots', () {
+        expect(() => Parser(self, '(|').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|a').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|a.').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|a. b = 1').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '[|').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '[|a').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '[|a.').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '[|a. b = 1').parse(), throwsSyntaxError);
       });
-      test("Not a slot", () {
-        expect(() => Parser(self, "(|").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|1|)").parse(), throwsSyntaxError);
+      test('Not a slot', () {
+        expect(() => Parser(self, '(|').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|1|)').parse(), throwsSyntaxError);
         expect(() => Parser(self, "(|'1'|)").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|()|)").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|[]|)").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|.|)").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|^|)").parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|()|)').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|[]|)').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|.|)').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|^|)').parse(), throwsSyntaxError);
       });
-      test("Inconsistent inline parameters", () {
-        expect(() => Parser(self, "(|at: a Put: = ()|)").parse(), throwsSyntaxError);
-        expect(() => Parser(self, "(|at: Put: b = ()|)").parse(), throwsSyntaxError);
+      test('Inconsistent inline parameters', () {
+        expect(() => Parser(self, '(|at: a Put: = ()|)').parse(), throwsSyntaxError);
+        expect(() => Parser(self, '(|at: Put: b = ()|)').parse(), throwsSyntaxError);
       });
-      test("<- used as method", () {
-        expect(() => Parser(self, "(|foo: a <- 42|)").parse(), throwsSyntaxError);
+      test('<- used as method', () {
+        expect(() => Parser(self, '(|foo: a <- 42|)').parse(), throwsSyntaxError);
       });
     });
   });
@@ -548,10 +548,10 @@ void main() {
       expect(self.execute('42 clone'), 42);
       expect(self.execute('-47.11 clone'), -47.11);
       expect(self.execute("'42' clone"), '42');
-      expect(self.execute("traits vector clone"), isNot(same(self.traitsVector)));
-      expect(self.execute("traits vector clone"), <SelfValue>[]);
-      expect(self.execute("traits vector clone: 2"), <SelfValue>[nil, nil]);
-      expect(self.execute("(| |) _Clone"), isA<SelfObject>());
+      expect(self.execute('traits vector clone'), isNot(same(self.traitsVector)));
+      expect(self.execute('traits vector clone'), <SelfValue>[]);
+      expect(self.execute('traits vector clone: 2'), <SelfValue>[nil, nil]);
+      expect(self.execute('(| |) _Clone'), isA<SelfObject>());
       // TODO expect(self.execute("() _Clone"), isA<SelfMethod>());
     });
 

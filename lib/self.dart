@@ -508,7 +508,7 @@ class Msg extends Code {
       if (p != null) {
         return p([r, ...a]);
       }
-      throw "UnknownPrimitive($selector)";
+      throw 'UnknownPrimitive($selector)';
     }
 
     // search for the method starting with the receiver
@@ -521,7 +521,7 @@ class Msg extends Code {
     if (v is Mutator) {
       slot = self._findSlot(r, (v).name, {});
       if (slot == null) {
-        throw "MutatorWithoutDataSlot($selector)";
+        throw 'MutatorWithoutDataSlot($selector)';
       }
       return slot.value = a.first;
     }
@@ -529,7 +529,7 @@ class Msg extends Code {
     // if the slot contains a method, activate it (this will execute the method)
     if (v is SelfMethod) {
       // in case of implicit sends, we need to set self to the original self
-      final rr = receiver == null ? self.findSlot(r, "self").value : r;
+      final rr = receiver == null ? self.findSlot(r, 'self').value : r;
 
       return v.activate(self, [rr, ...a]);
     }
@@ -583,7 +583,7 @@ class _Token {
 
   // coverage:ignore-start
   @override
-  String toString() => "{$type $value}";
+  String toString() => '{$type $value}';
   // coverage:ignore-end
 }
 
@@ -641,9 +641,9 @@ enum _T { end, num, str, nam, op, kw, lp, rp, bar, col, dot, lbr, rbr, ret }
 class Parser {
   /// Creates a list of tokens from the [source].
   static Iterable<_Token> _tokenize(String source) sync* {
-    const kTOKEN = r"(-?\d+(?:\.\d+)?)|"
+    const kTOKEN = r'(-?\d+(?:\.\d+)?)|'
         r"'((?:\\[bfnrtu\']|[^'])*)'|"
-        r"(\w+:?)|([-+*/%!=<>~&|,]+)|"
+        r'(\w+:?)|([-+*/%!=<>~&|,]+)|'
         r'([()|:.[\]^])|"[^"]*"|\s+';
     for (Match m in RegExp(kTOKEN).allMatches(source)) {
       if (m[1] != null) {
@@ -651,7 +651,7 @@ class Parser {
       } else if (m[2] != null) {
         yield _Token(_T.str, _unescape(m[2]!), m.start);
       } else if (m[3] != null) {
-        yield _Token(m[3]!.endsWith(":") ? _T.kw : _T.nam, m[3]!, m.start);
+        yield _Token(m[3]!.endsWith(':') ? _T.kw : _T.nam, m[3]!, m.start);
       } else if (m[4] != null) {
         if (m[4] == '|') {
           yield _Token(_T.bar, m[4]!, m.start);
@@ -710,7 +710,7 @@ class Parser {
   String value() => _tokens[index++].value;
 
   /// Returns a throwable syntax error message.
-  String syntaxError(String message) => "SyntaxError: $message at ${_tokens[index].pos}";
+  String syntaxError(String message) => 'SyntaxError: $message at ${_tokens[index].pos}';
 
   /// Converts the source code into a global Self method.
   SelfMethod parse() {
@@ -720,10 +720,10 @@ class Parser {
       if (_type == _T.dot) {
         index++; // skip .
       } else if (_type != _T.end) {
-        throw syntaxError("End of input expected");
+        throw syntaxError('End of input expected');
       }
     }
-    return SelfMethod([Slot.a("lobby", self.lobby, parent: true)], codes);
+    return SelfMethod([Slot.a('lobby', self.lobby, parent: true)], codes);
   }
 
   /// Returns a literal (a number, string or object) parsed from the source.
@@ -741,7 +741,7 @@ class Parser {
     if (_type == _T.lbr) {
       return parseBlock();
     }
-    throw syntaxError("number, string, (, or [ expected");
+    throw syntaxError('number, string, (, or [ expected');
   }
 
   /// Returns a Self object or Self method parsed from the source.
@@ -755,7 +755,7 @@ class Parser {
       if (_type == _T.dot) {
         index++; // skip .
       } else if (_type != _T.rp) {
-        throw syntaxError(") expected");
+        throw syntaxError(') expected');
       }
     }
     index++; // skip )
@@ -776,7 +776,7 @@ class Parser {
           index++; // skip .
         }
         if (_type != _T.rbr) {
-          throw syntaxError("] expected");
+          throw syntaxError('] expected');
         }
         break;
       }
@@ -784,7 +784,7 @@ class Parser {
       if (_type == _T.dot) {
         index++; // skip .
       } else if (_type != _T.rbr) {
-        throw syntaxError("] expected");
+        throw syntaxError('] expected');
       }
     }
     index++; // skip ]
@@ -793,20 +793,20 @@ class Parser {
       codes.add(Lit(self.nilObject));
     }
     // create the block method's selector name
-    String selector = "value";
+    String selector = 'value';
     for (int i = 0; i < slots.length; i++) {
       if (slots[i].argument) {
-        if (selector == "value") {
-          selector = "value:";
+        if (selector == 'value') {
+          selector = 'value:';
         } else {
-          selector += "With:";
+          selector += 'With:';
         }
       }
     }
-    slots.insert(0, Slot.a("(parent)", self.nilObject, parent: true));
+    slots.insert(0, Slot.a('(parent)', self.nilObject, parent: true));
     return SelfObject([
-      Slot.c("parent", self.traitsBlock, parent: true),
-      Slot.a("lexicalParent", self.nilObject),
+      Slot.c('parent', self.traitsBlock, parent: true),
+      Slot.a('lexicalParent', self.nilObject),
       Slot.c(selector, SelfMethod(slots, codes))
     ]);
   }
@@ -825,7 +825,7 @@ class Parser {
       if (_type == _T.dot) {
         index++; // skip .
       } else if (_type != _T.bar) {
-        throw syntaxError("| expected");
+        throw syntaxError('| expected');
       }
     }
     index++; // skip |
@@ -868,15 +868,15 @@ class Parser {
         name += value();
         if (_type == _T.nam) {
           if (args.isEmpty) {
-            throw syntaxError("inconsistent use of inline parameters");
+            throw syntaxError('inconsistent use of inline parameters');
           }
           args.add(value());
         } else if (args.isNotEmpty) {
-          throw syntaxError("inconsistent use of inline parameters");
+          throw syntaxError('inconsistent use of inline parameters');
         }
       }
     } else {
-      throw syntaxError("name, operator or keyword expected");
+      throw syntaxError('name, operator or keyword expected');
     }
 
     // parent slots are marked with `*`
@@ -916,7 +916,7 @@ class Parser {
       index++; // skip <-
       // we cannot define methods with `<-` so we will always execute the code
       if (args.isNotEmpty) {
-        throw syntaxError("No inline parameters with <- allowed");
+        throw syntaxError('No inline parameters with <- allowed');
       }
       val = parseMessage().execute(self, self.lobby);
       // argument slots are never data slots
@@ -936,8 +936,8 @@ class Parser {
 
   /// Prepends a ":self*" slot if missing and inject optional inline arguments before method's local slots.
   void _injectMethodArgs(SelfMethod m, List<String> args) {
-    if (m.slots.isEmpty || m.slots[0].name != "self") {
-      m.slots.insert(0, Slot.a("self", self.nilObject, parent: true));
+    if (m.slots.isEmpty || m.slots[0].name != 'self') {
+      m.slots.insert(0, Slot.a('self', self.nilObject, parent: true));
       for (int i = 0; i < args.length; i++) {
         m.slots.insert(i + 1, Slot.a(args[i], self.nilObject));
       }
@@ -948,7 +948,7 @@ class Parser {
   Code parseMessage() {
     Code? m = parseBinaryMessage();
     if (_type == _T.kw) {
-      String name = "";
+      String name = '';
       final args = <Code>[];
       while (_type == _T.kw /*&& _tokens[index].value[0].hasMatch(new RegExp("A-Z"))*/) {
         // TODO
@@ -957,7 +957,7 @@ class Parser {
       }
       m = Msg(m, name, args);
     } else if (m == null) {
-      throw syntaxError("message expected");
+      throw syntaxError('message expected');
     }
     return m;
   }
@@ -1222,7 +1222,7 @@ class Self {
   Slot findSlot(SelfValue obj, String name) {
     final slot = _findSlot(obj, name, {});
     if (slot == null) {
-      throw "UnknownMessageSend($name)";
+      throw 'UnknownMessageSend($name)';
     }
     return slot;
   }
@@ -1243,7 +1243,7 @@ class Self {
           final s = _findSlot(slot.value, name, visited);
           if (s != null) {
             if (foundSlot != null) {
-              throw "AmbiguousMessageSend($name)";
+              throw 'AmbiguousMessageSend($name)';
             }
             foundSlot = s;
           }
