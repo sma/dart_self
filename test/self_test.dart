@@ -211,6 +211,7 @@ void main() {
       group('Objects:', () {
         test('Empty objects', () {
           expect(o(Parser(self, '()').parseLiteral()).slots, isEmpty);
+          expect(o(Parser(self, '(||)').parseLiteral()).slots, isEmpty);
           expect(o(Parser(self, '(| |)').parseLiteral()).slots, isEmpty);
         });
 
@@ -358,13 +359,15 @@ void main() {
 
       group('Blocks:', () {
         test('Empty', () {
-          final obj = o(Parser(self, '[]').parseLiteral());
-          expect(obj.slots[0].name, 'parent');
-          expect(obj.slots[0].value, self.traitsBlock);
-          expect(obj.slots[0].parent, true);
-          expect(obj.slots[1].name, 'lexicalParent');
-          expect(obj.slots[2].name, 'value');
-          expect(obj.slots[2].value, isA<SelfMethod>());
+          for (final source in ['[]', '[||]', '[| |]']) {
+            final obj = o(Parser(self, source).parseLiteral());
+            expect(obj.slots[0].name, 'parent');
+            expect(obj.slots[0].value, self.traitsBlock);
+            expect(obj.slots[0].parent, true);
+            expect(obj.slots[1].name, 'lexicalParent');
+            expect(obj.slots[2].name, 'value');
+            expect(obj.slots[2].value, isA<SelfMethod>());
+          }
         });
 
         test('With arguments', () {

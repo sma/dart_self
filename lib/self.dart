@@ -588,7 +588,7 @@ class _Token {
 }
 
 /// Token types - conceptually belonging to [_Token].
-enum _T { end, num, str, nam, op, kw, lp, rp, bar, col, dot, lbr, rbr, ret }
+enum _T { end, num, str, nam, op, kw, lp, rp, col, dot, lbr, rbr, ret }
 
 /**
  * Parses Self source code into object literals or message expressions.
@@ -644,7 +644,7 @@ class Parser {
     const kTOKEN = r'(-?\d+(?:\.\d+)?)|'
         r"'((?:\\[bfnrtu\']|[^'])*)'|"
         r'(\w+:?)|([-+*/%!=<>~&|,]+)|'
-        r'([()|:.[\]^])|"[^"]*"|\s+';
+        r'([():.[\]^])|"[^"]*"|\s+';
     for (final m in RegExp(kTOKEN).allMatches(source)) {
       if (m[1] != null) {
         yield _Token(_T.num, m[1]!, m.start);
@@ -653,14 +653,10 @@ class Parser {
       } else if (m[3] != null) {
         yield _Token(m[3]!.endsWith(':') ? _T.kw : _T.nam, m[3]!, m.start);
       } else if (m[4] != null) {
-        if (m[4] == '|') {
-          yield _Token(_T.bar, m[4]!, m.start);
-        } else {
-          yield _Token(_T.op, m[4]!, m.start);
-        }
+        yield _Token(_T.op, m[4]!, m.start);
       } else if (m[5] != null) {
-        const ts = [_T.lp, _T.rp, _T.bar, _T.col, _T.dot, _T.lbr, _T.rbr, _T.ret];
-        yield _Token(ts['()|:.[]^'.indexOf(m[5]!)], m[5]!, m.start);
+        const ts = [_T.lp, _T.rp, _T.col, _T.dot, _T.lbr, _T.rbr, _T.ret];
+        yield _Token(ts['():.[]^'.indexOf(m[5]!)], m[5]!, m.start);
       }
     }
     yield _Token(_T.end, '', source.length);
@@ -748,7 +744,8 @@ class Parser {
   /// The current token must be `(`.
   SelfObject parseObject() {
     index++; // skip (
-    final slots = _type == _T.bar ? parseSlots() : <Slot>[];
+    final slots = _at('|') ? parseSlots() : <Slot>[];
+    if (slots.isEmpty && _at('||')) index++;
     final codes = <Code>[];
     while (_type != _T.rp) {
       codes.add(parseMessage());
@@ -766,7 +763,8 @@ class Parser {
   /// The current token must be `[`.
   SelfObject parseBlock() {
     index++; // skip [
-    final slots = _type == _T.bar ? parseSlots() : <Slot>[];
+    final slots = _at('|') ? parseSlots() : <Slot>[];
+    if (slots.isEmpty && _at('||')) index++;
     final codes = <Code>[];
     while (_type != _T.rbr) {
       if (_type == _T.ret) {
@@ -816,7 +814,7 @@ class Parser {
   List<Slot> parseSlots() {
     index++; // skip |
     final slots = <Slot>[];
-    while (_type != _T.bar) {
+    while (!_at('|')) {
       final slot = parseSlot();
       slots.add(slot);
       if (slot.data) {
@@ -824,7 +822,7 @@ class Parser {
       }
       if (_type == _T.dot) {
         index++; // skip .
-      } else if (_type != _T.bar) {
+      } else if (!_at('|')) {
         throw syntaxError('| expected');
       }
     }
@@ -964,7 +962,7 @@ class Parser {
 
   Code? parseBinaryMessage() {
     var m = parseUnaryMessage();
-    while (_type == _T.op) {
+    while (_type == _T.op && !_at('|')) {
       m = Msg(m, value(), [parseUnaryMessage()!]); // TODO !
     }
     return m;
