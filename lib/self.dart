@@ -457,6 +457,9 @@ class Mth extends Code {
   SelfValue execute(Self self, SelfObject activation) {
     return (lit.value as SelfMethod).codes.fold(self.nilObject, (result, code) => code.execute(self, activation));
   }
+
+  @override
+  String toString() => lit.toString();
 }
 
 /**

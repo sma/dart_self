@@ -438,8 +438,14 @@ void main() {
       });
 
       test('Parenthesized messages', () {
-        // expect(new Parser(self, "(1 + 2) * 3").parseMessage().toString(), "(* (+ <1> <2> <3>))");
-        // expect(new Parser(self, "1 + (2 * 3)").parseMessage().toString(), "(+ <1> (* <2> <3>))");
+        expect(Parser(self, '(1 + 2) * 3').parseMessage().toString(), '{* (|  | {+ 1 2} ) 3}');
+        expect(Parser(self, '1 + (2 * 3)').parseMessage().toString(), '{+ 1 (|  | {* 2 3} )}');
+      });
+
+      test('Not a message', () {
+        expect(Parser(self, '()').parseMessage().toString(), '(|  |)');
+        expect(Parser(self, '(||)').parseMessage().toString(), '(|  |)');
+        expect(Parser(self, '(| |)').parseMessage().toString(), '(|  |)');
       });
     });
 
@@ -554,8 +560,10 @@ void main() {
       expect(self.execute('traits vector clone'), isNot(same(self.traitsVector)));
       expect(self.execute('traits vector clone'), <SelfValue>[]);
       expect(self.execute('traits vector clone: 2'), <SelfValue>[nil, nil]);
-      expect(self.execute('(| |) _Clone'), isA<SelfObject>());
-      // TODO expect(self.execute("() _Clone"), isA<SelfMethod>());
+      final obj = SelfObject([]);
+      self.lobby.addSlotIfAbsent(Slot.c('t', obj));
+      expect(self.execute('t _Clone'), isNot(same(obj)));
+      expect(self.execute('t _Clone'), isA<SelfObject>());
     });
 
     test('Arithmetic operations on numbers', () {
