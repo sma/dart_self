@@ -59,7 +59,7 @@ class SelfObject {
   SelfObject(this.slots);
 
   /// Returns a list of cloned slots which should be used to construct a clone of the receiver.
-  List<Slot> clonedSlots() => slots.map((Slot slot) => slot.clone()).toList();
+  List<Slot> clonedSlots() => slots.map((slot) => slot.clone()).toList();
 
   /// Clones the receiver. Subclasses should override this method.
   SelfObject clone() => SelfObject(clonedSlots());
@@ -67,10 +67,10 @@ class SelfObject {
   /// Adds the [slot] if the receiver doesn't yet have a slot with that name.
   void addSlotIfAbsent(Slot slot) {
     if (!slots.any((s) => s.name == slot.name)) {
-      slot = slot.clone();
-      slots.add(slot);
-      if (slot.data) {
-        slots.add(Slot.m(slot.name));
+      final clonedSlot = slot.clone();
+      slots.add(clonedSlot);
+      if (clonedSlot.data) {
+        slots.add(Slot.m(clonedSlot.name));
       }
     }
   }
@@ -263,7 +263,7 @@ class SelfMethod extends SelfObject {
    */
   SelfValue execute(Self self) {
     try {
-      return codes.fold(self.nilObject, (result, Code code) => code.execute(self, this));
+      return codes.fold(self.nilObject, (result, code) => code.execute(self, this));
     } on NonLocalReturn catch (ret) {
       if (ret.target == this) {
         return ret.value;
@@ -455,7 +455,7 @@ class Mth extends Code {
 
   @override
   SelfValue execute(Self self, SelfObject activation) {
-    return (lit.value as SelfMethod).codes.fold(self.nilObject, (result, Code code) => code.execute(self, activation));
+    return (lit.value as SelfMethod).codes.fold(self.nilObject, (result, code) => code.execute(self, activation));
   }
 }
 
@@ -500,7 +500,7 @@ class Msg extends Code {
     final r = receiver?.execute(self, activation) ?? activation;
 
     // recursively evaluate the arguments
-    final a = arguments.map((Code arg) => arg.execute(self, activation));
+    final a = arguments.map((arg) => arg.execute(self, activation));
 
     // deal with primitives
     if (selector.startsWith('_')) {
@@ -519,7 +519,7 @@ class Msg extends Code {
     // if the slot found is a mutator, search for the matching data slot
     // (which stores the value) which must exist and mutate it
     if (v is Mutator) {
-      slot = self._findSlot(r, (v).name, {});
+      slot = self._findSlot(r, v.name, {});
       if (slot == null) {
         throw 'MutatorWithoutDataSlot($selector)';
       }
@@ -554,7 +554,7 @@ class Ret extends Code {
 
   @override
   SelfValue execute(Self self, SelfObject activation) {
-    SelfMethod target = activation as SelfMethod;
+    var target = activation as SelfMethod;
     // search for the method context to return from
     while (target.isBlock) {
       target = target.slots[0].value as SelfMethod; // TODO cast
@@ -645,7 +645,7 @@ class Parser {
         r"'((?:\\[bfnrtu\']|[^'])*)'|"
         r'(\w+:?)|([-+*/%!=<>~&|,]+)|'
         r'([()|:.[\]^])|"[^"]*"|\s+';
-    for (Match m in RegExp(kTOKEN).allMatches(source)) {
+    for (final m in RegExp(kTOKEN).allMatches(source)) {
       if (m[1] != null) {
         yield _Token(_T.num, m[1]!, m.start);
       } else if (m[2] != null) {
@@ -669,7 +669,7 @@ class Parser {
   /// Returns a new string with the usual string escape sequences replaced.
   static String _unescape(String s) {
     const kTOKEN = "\\\\(?:([bfnrt\\\\'])|u([0-9a-fA-F]{4}))";
-    return s.replaceAllMapped(RegExp(kTOKEN), (Match m) {
+    return s.replaceAllMapped(RegExp(kTOKEN), (m) {
       if (m[2] != null) {
         return String.fromCharCode(int.parse(m[2]!, radix: 16));
       } else {
@@ -793,8 +793,8 @@ class Parser {
       codes.add(Lit(self.nilObject));
     }
     // create the block method's selector name
-    String selector = 'value';
-    for (int i = 0; i < slots.length; i++) {
+    var selector = 'value';
+    for (var i = 0; i < slots.length; i++) {
       if (slots[i].argument) {
         if (selector == 'value') {
           selector = 'value:';
@@ -938,7 +938,7 @@ class Parser {
   void _injectMethodArgs(SelfMethod m, List<String> args) {
     if (m.slots.isEmpty || m.slots[0].name != 'self') {
       m.slots.insert(0, Slot.a('self', self.nilObject, parent: true));
-      for (int i = 0; i < args.length; i++) {
+      for (var i = 0; i < args.length; i++) {
         m.slots.insert(i + 1, Slot.a(args[i], self.nilObject));
       }
     }
@@ -946,9 +946,9 @@ class Parser {
 
   /// Returns the next message parsed from the source.
   Code parseMessage() {
-    Code? m = parseBinaryMessage();
+    var m = parseBinaryMessage();
     if (_type == _T.kw) {
-      String name = '';
+      var name = '';
       final args = <Code>[];
       while (_type == _T.kw /*&& _tokens[index].value[0].hasMatch(new RegExp("A-Z"))*/) {
         // TODO
@@ -963,7 +963,7 @@ class Parser {
   }
 
   Code? parseBinaryMessage() {
-    Code? m = parseUnaryMessage();
+    var m = parseUnaryMessage();
     while (_type == _T.op) {
       m = Msg(m, value(), [parseUnaryMessage()!]); // TODO !
     }
@@ -1076,9 +1076,7 @@ class Self {
     primitives.addAll({
       '_AddSlotsIfAbsent:': (a) {
         final r = a[0] as SelfObject;
-        for (final slot in (a[1] as SelfObject).slots) {
-          r.addSlotIfAbsent(slot);
-        }
+        (a[1] as SelfObject).slots.forEach(r.addSlotIfAbsent);
         return r;
       },
       '_Clone': (a) => (a[0] as SelfObject).clone(),
@@ -1232,13 +1230,13 @@ class Self {
       visited.add(obj);
       final slots = _getSlots(obj);
       //print("$name: $slots");
-      for (Slot slot in slots) {
+      for (final slot in slots) {
         if (slot.name == name) {
           return slot;
         }
       }
       Slot? foundSlot;
-      for (Slot slot in slots) {
+      for (final slot in slots) {
         if (slot.parent) {
           final s = _findSlot(slot.value, name, visited);
           if (s != null) {

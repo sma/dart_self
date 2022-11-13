@@ -316,7 +316,7 @@ void main() {
         });
 
         group('Computed', () {
-          setUp(() => self.initialize());
+          setUp(self.initialize);
 
           test('Constant slot', () {
             final obj = o(Parser(self, '(| ab = true |)').parseLiteral());
