@@ -449,17 +449,17 @@ class Lit extends Code {
  * Executing a method code executes the method literal's code and returns its value.
  */
 class Mth extends Code {
-  final Lit lit;
+  final SelfMethod method;
 
-  Mth(this.lit);
+  Mth(this.method);
 
   @override
   SelfValue execute(Self self, SelfObject activation) {
-    return (lit.value as SelfMethod).codes.fold(self.nilObject, (result, code) => code.execute(self, activation));
+    return method.codes.fold(self.nilObject, (result, code) => code.execute(self, activation));
   }
 
   @override
-  String toString() => lit.toString();
+  String toString() => method.toString();
 }
 
 /**
@@ -654,7 +654,7 @@ class Parser {
       } else if (m[2] != null) {
         yield _Token(_T.str, _unescape(m[2]!), m.start);
       } else if (m[3] != null) {
-        _T type; 
+        _T type;
         if (m[3]!.endsWith(':')) {
           type = m[3]!.startsWith(RegExp('[A-Z]')) ? _T.kw2 : _T.kw1;
         } else {
@@ -906,7 +906,7 @@ class Parser {
       if (val is Lit) {
         val = val.value;
       } else if (val is Mth) {
-        val = val.lit.value;
+        val = val.method;
       } else if (val is Msg) {
         val = val.execute(self, self.lobby);
       }
@@ -981,9 +981,10 @@ class Parser {
     if (_type == _T.num || _type == _T.str || _type == _T.lp) {
       // explicit receiver
       final v = parseLiteral();
-      m = Lit(v);
       if (v is SelfMethod) {
-        m = Mth(m as Lit);
+        m = Mth(v);
+      } else {
+        m = Lit(v);
       }
     } else if (_type == _T.lbr) {
       m = Blk(parseBlock());

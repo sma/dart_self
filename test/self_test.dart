@@ -149,8 +149,8 @@ void main() {
 
     test('Literal methods', () {
       final a = SelfObject([]);
-      final meth = SelfMethod([], [Lit(1)]);
-      expect(Mth(Lit(meth)).execute(self, a), 1);
+      expect(Mth(SelfMethod([], [])).execute(self, a), nil);
+      expect(Mth(SelfMethod([], [Lit(1)])).execute(self, a), 1);
     });
 
     test('Literal blocks', () {
