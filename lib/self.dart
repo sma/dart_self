@@ -17,39 +17,39 @@ typedef SelfValue = Object;
  * 
  *     the empty object:
  *         ( )
- *         new SelfObject([]);
+ *         SelfObject([]);
  *
  *     an object with a single constant slot "a" initialized to 1:
  *         (| a = 1 |)
- *         new SelfObject([new Slot.constant("a", 1)]);
+ *         SelfObject([Slot.c("a", 1)]);
  *
  *     an object with a single data slot "b":
  *        (| b |)
- *        new SelfObject([new Slot.data("b", Self.nilObject), new Slot.mutator("b")]);
+ *        SelfObject([Slot.d("b", nil), Slot.m("b")]);
  *
  *     an object with a single data slot "b" initialized to 2:
  *        (| b <- 2 |)
- *        new SelfObject([new Slot.data("b", 2), new Slot.mutator("b")]);
+ *        SelfObject([Slot.d("b", 2), Slot.m("b")]);
  *
  *     an object with both a constant slot and a data slot:
  *        (| a = 1. b <- 2 |)
- *        new SelfObject([new Slot.constant("a", 1), new Slot.data("b", 2), new Slot.mutator("b")]);
+ *        SelfObject([Slot.c("a", 1), Slot.d("b", 2), Slot.m("b")]);
  *
  *     an object with a constant parent slot "c" initialized to another empty object:
  *         (| c* = () |)
- *         new SelfObject([new Slot.constant("c", new SelfObject([]), parent:true)]);
+ *         SelfObject([Slot.c("c", SelfObject([]), parent: true)]);
  *
  *     an object (typically a method) with a parent-argument slot named "self", another argument slot and a data slot:
  *         (| :self*. :a. b |)
- *         var ss = new Slot.argument("self", nil, parent:true);
- *         var sa = new Slot.argument("a", nil);
- *         var sb = new Slot.data("b", Self.nilObject);
- *         var sm = new Slot.mutator("b");
- *         new SelfObject([ss, sa, sb, sm]);
+ *         var ss = Slot.s(nil);
+ *         var sa = Slot.a("a", nil);
+ *         var sb = Slot.d("b", nil);
+ *         var sm = Slot.m("b");
+ *         SelfObject([ss, sa, sb, sm]);
  *
  *     an object (typically a block method) with a parent-argument slot named "(parent)":
  *         (| :(parent)*. |)
- *         new SelfObject([new Slot.argument("(parent)", nil, parent:true)]);
+ *         SelfObject([Slot.a("(parent)", nil, parent: true)]);
  */
 class SelfObject {
   /// Holds the object's [Slot] objects.
@@ -94,39 +94,39 @@ class SelfObject {
  * 
  *     the empty method:
  *         ( )
- *         new SelfMethod([...], []);
+ *         SelfMethod([...], []);
  *
  *     a method returning a literal:
  *         ( 1 )
- *         new SelfMethod([...], [new Lit(1)]);
+ *         SelfMethod([...], [Lit(1)]);
  *
  *     literals can also be objects:
  *         ( (|a = 1|) )
- *         new SelfMethod([...], [new Lit(new SelfObject([new Slot.constant("a", 1)]))]);
+ *         SelfMethod([...], [Lit(SelfObject([Slot.c("a", 1)]))]);
  *
  *     a method returning the result of adding 3 and 4:
  *         ( 3 + 4 )
- *         new SelfMethod([...], [new Msg(new Lit(3), "+", [new Lit(4)])]);
+ *         SelfMethod([...], [Msg(Lit(3), "+", [Lit(4)])]);
  *
  *     a method sending two implicit messages, returning the result of the last message send:
  *         ( one. two )
- *         new SelfMethod([...], [new IMsg("one", []), IMsg("two", [])]);
+ *         SelfMethod([...], [Msg(null, "one", []), Msg(null, "two", [])]);
  *
  *     a method sending an implicit message with an argument:
- *         ( a: 1 )
- *         new SelfMethod([...], [new IMsg("one", [new Lit(1)])]);
+ *         ( one: 1 )
+ *         SelfMethod([...], [Msg(null, "one:", [Lit(1)])]);
  *
  *     a block method with a non-local return:
  *         ( one. ^1 )
- *         new SelfMethod([...], [new IMsg("one", []), new Ret(new Lit(1))]);
+ *         SelfMethod([...], [Msg(null, "one", []), Ret(Lit(1))]);
  *
  *     a method with a block literal:
  *         ( [ ] )
- *         var mth = new SelfMethod([new Slot.argument("(parent)", nil, parent: true)], []);
- *         var blk = new SelfObject([new Slot.argument("(lexicalParent)", nil),
- *                                   new Slot.constant("value"), mth),
- *                                   new Slot.constant("parent", Self.traitsBlock, parent:true)];
- *         new SelfMethod([...], [new Blk(new Lit(blk))]);
+ *         var mth = SelfMethod([Slot.a("(parent)", nil, parent: true)], []);
+ *         var blk = SelfObject([Slot.a("(lexicalParent)", nil),
+ *                                   Slot.c("value"), mth),
+ *                                   Slot.c("parent", traitsBlock, parent: true)];
+ *         SelfMethod([...], [Blk(blk)]);
  *
  * Please note the convention that every method object must have a 
  * parent-argument slot called `self` and enough argument slots matching 
@@ -144,37 +144,40 @@ class SelfObject {
  *
  * Examples:
  * 
- *     an unary method called size by assignment (body omitted):
+ *     an unary method called "size" by assignment (body omitted):
  *         (| size = ( ... ) |)
  *         (| size = ( | :self* | ... ) |)
- *         new SelfMethod([new Slot.argument("self", nil, parent:true)], [...]);
+ *         SelfMethod([Slot.s(nil)], [...]);
  *
- *     a binary method called + by assignment (body omitted):
+ *     a binary method called "+"" by assignment (body omitted):
  *         (| + num = ( ... ) |)
  *         (| + = (| :self*. :num | ... ) |)
- *         new SelfMethod([new Slot.argument("self", nil, parent:true), new Slot.argument("num", nil)], [...]);
+ *         SelfMethod([Slot.s(nil), Slot.a("num", nil)], [...]);
  *
- *     a single keyword method called ifTrue: by assignment (body omitted):
+ *     a single keyword method called "ifTrue:" by assignment (body omitted):
  *         (| ifTrue: block = ( ... ) |)
  *         (| ifTrue: = (| :self*. :block | ... ) |)
- *         new SelfMethod([new Slot.argument("self", nil, parent:true), new Slot.argument("block", nil)], [...]);
+ *         SelfMethod([Slot.s(nil), Slot.a("block", nil)], [...]);
  *
- *     a keyword method with two keyword parts called ifTrue:False: by assignment (body omitted):
+ *     a keyword method with two keyword parts called "ifTrue:False:"" 
+ *     by assignment (body omitted):
  *         (| ifTrue: block False: anotherBlock = ( ... ) |)
  *         (| ifTrue:False: = (| :self*. :block. :anotherBlock | ... ) |)
- *         new SelfMethod([new Slot.argument("self", nil, parent:true)
- *                         new Slot.argument("block", nil),
- *                         new Slot.argument("anotherBlock", nil)], [...]);
+ *         SelfMethod([
+ *             Slot.s(nil)
+ *             Slot.a("block", nil),
+ *             Slot.a("anotherBlock", nil)], [...]);
  *
- *     a binary method with two additional data slots:
+ *     a binary method "&" with two additional data slots:
  *         (| & obj = (| t1. t2 <- 7 | ... ) |)
  *         (| & = (| *self:. :obj. t1. t2 <- 7 | ... ) |)
- *         new SelfMethod([new Slot.argument("self", nil, parent:true),
- *                         new Slot.argument("obj", nil),
- *                         new Slot.data("t1", Self.nilObject),
- *                         new Slot.mutator("t1")],
- *                         new Slot.data("t2", 7),
- *                         new Slot.mutator("t2")], [...]);
+ *         SelfMethod([
+ *             Slot.s(nil),
+ *             Slot.a("obj", nil),
+ *             Slot.d("t1", nil),
+ *             Slot.m("t1")],
+ *             Slot.d("t2", 7),
+ *             Slot.m("t2")], [...]);
  *
  * The first line in each example shows the typical inline argument slot 
  * definition and the second line shows the explicit slot definition.
@@ -200,23 +203,27 @@ class SelfObject {
  * 
  *     the empty block (returning nil):
  *         [ ]
- *         (| (lexicalParent). parent* = traits block. value = (| :(parent)* | nil) |)
+ *         (| (lexicalParent). parent* = traits block. 
+ *            value = (| :(parent)* | nil) |)
  *
  *     a block returning a literal:
  *         [ 1 ]
- *         (| (lexicalParent). parent* = traits block. value = (| :(parent)* | 1) |)
+ *         (| (lexicalParent). parent* = traits block.
+ *            value = (| :(parent)* | 1) |)
  *
  *     a block taking a parameter and defining a local variable:
  *         [| :a. b | b: a. b + 1]
- *         (| (lexicalParent). parent* = traits block. value: = (| :(parent)*. :a. b | b: a. b + 1) |)
+ *         (| (lexicalParent). parent* = traits block.
+ *            value: = (| :(parent)*. :a. b | b: a. b + 1) |)
  *
  *     a block with two parameters, defining another block:
  *         [| :a :b | [a + b] ]
  *         (| (lexicalParent).
  *            parent* = traits block.
- *            value:With: = (| :(parent)*. :a. :b | (| (lexicalParent).
- *                                                     parent* = traits block.
- *                                                     value = (| :(parent)* | a + b ) |) ) |)
+ *            value:With: = (| :(parent)*. :a. :b |
+ *               (| (lexicalParent).
+ *                  parent* = traits block.
+ *                  value = (| :(parent)* | a + b ) |) ) |)
  *
  * The first line shows the block syntax, the second line demonstrates the 
  * actual implementation. It is worth noticing that `(lexicalParent)` always
@@ -317,6 +324,9 @@ class Slot {
   /// Constructs a new mutator slot.
   Slot.m(String name) : this.c('$name:', Mutator(name));
 
+  /// Constructs a new `:self*` argument slot.
+  Slot.s(SelfObject self) : this.a('self', self, parent: true);
+
   Slot._(this.name, this.kind, this.value);
 
   /// Clones the receiver if its value can be mutated, otherwise it can be shared.
@@ -353,15 +363,17 @@ class Mutator {
  *
  *      number:
  *          42
- *          new Lit(42);
+ *          Lit(42);
  *
  *      string:
  *          'abc'
- *          new Lit('abc');
+ *          Lit('abc');
  *
  *      object:
  *          ( )
- *          new Lit(new SelfObject([]));
+ *          Lit(SelfObject([]));
+ *          (| a <- 1 |)
+ *          Lit(SelfObject([Slot.d('a', 1), Slot.m('a')]));
  *
  * Method objects must be wrapped with a [Mth]. Because it is known at 
  * compile time whether a literal is a primitive object, a simple literal 
@@ -371,48 +383,52 @@ class Mutator {
  *
  *      a method literal:
  *          ( 42 )
- *          new Mth(new Lit(new SelfMethod(
- *              [new Slot.argument("self", nil, parent:true)], 
- *              [new Lit(42)])))
+ *          Mth(SelfMethod([Slot.s(nil)], [Lit(42)]));
  *
  * Block objects must be wrapped with a [Blk] for the same reason:
  *
  *      a block literal:
  *          [ 21 ]
- *          var blk = new SelfMethod([new Slot.argument("(parent)", nil, parent:true)], [new Lit(21)]);
- *          new Blk(new Lit(new SelfObject([new Slot.argument("(lexicalParent)", nil),
- *                                          new Slot.constant("value", blk),
- *                                          new Slot.constant("parent", Self.traitsBlock)])));
+ *          var blk = SelfMethod([Slot.a("(parent)", nil, parent: true)], [Lit(21)]);
+ *          Blk(SelfObject([
+ *              Slot.a("(lexicalParent)", nil),
+ *              Slot.c("value", blk),
+ *              Slot.c("parent", traitsBlock)]));
  *
  * Here are examples for messages:
  *
  *      an implicit unary message:
  *          foo
- *          new Msg(null, "foo", [])
+ *          Msg(null, "foo", []);
  *
  *      an explicit unary message:
- *          2 negated
- *          new Msg(new Lit(2), "negated", [])
+ *          2 negate
+ *          Msg(Lit(2), "negate", []);
  *
  *      an explicit unary message (using an implicit unary message to compute the receiver):
  *          foo bar baz
- *          new Msg(new Msg(new Msg(null, "foo", []), "bar", []), "baz", [])
+ *          Msg(Msg(Msg(null, "foo", []), "bar", []), "baz", []);
  *
  *      an implicit binary message:
  *          << 7
- *          new Msg(null, "<<", [new Lit(7)])
+ *          Msg(null, "<<", [Lit(7)]);
  *
  *      an explicit binary message:
  *          3 + 4
- *          new Msg(new Lit(3), "+", [new Lit(4)])
+ *          Msg(Lit(3), "+", [Lit(4)]);
  *
  *      an implicit single keyword message:
  *          foo: 1
- *          new Msg(null, "foo:", [new Lit(1)])
+ *          Msg(null, "foo:", [Lit(1)]);
+ * 
+ *      an implicit two keyword message:
+ *          foo: 1 Bar: 2
+ *          Msg(null, "foo:Bar:", [Lit(1), Lit(2)]);
  *
  *      an explicit two keyword message:
- *          array at: 1 Put: 3 + 4
- *          new Msg(new Msg(null, "array", []), "at:Put:", [new Lit(1), new Msg(new Lit(3), "+", [new Lit(4)])])
+ *          array at: 1 negate Put: 3 + 4
+ *          Msg(Msg(null, "array", []), "at:Put:",
+ *              [Msg(Lit(1), "negate", []), Msg(Lit(3), "+", [Lit(4)])])
  *
  * Because explicit and implicit message sends can be detected at compile 
  * time, we should probably use two kind of classes where to save a runtime 
@@ -487,8 +503,6 @@ class Blk extends Code {
  * inherited via `self*`.
  *
  * Executing a message code will search for the selected method, activate it and execute it.
- *
- * TODO there should be IMsg (implicit) and EMsg (explicit) and PMsg (primitive)
  */
 class Msg extends Code {
   final Code? receiver;
@@ -728,7 +742,7 @@ class Parser {
         throw syntaxError('End of input expected');
       }
     }
-    return SelfMethod([Slot.a('self', self.lobby, parent: true)], codes);
+    return SelfMethod([Slot.s(self.lobby)], codes);
   }
 
   /// Returns a literal (a number, string or object) parsed from the source.
@@ -908,7 +922,7 @@ class Parser {
       } else if (val is Mth) {
         val = val.method;
       } else if (val is Msg) {
-        val = val.execute(self, self.lobby);
+        val = SelfMethod([Slot.s(self.lobby)], [val]).execute(self);
       }
       // methods may need argument slots
       if (val is SelfMethod) {
@@ -944,7 +958,7 @@ class Parser {
   /// Prepends a ":self*" slot if missing and inject optional inline arguments before method's local slots.
   void _injectMethodArgs(SelfMethod m, List<String> args) {
     if (m.slots.isEmpty || m.slots[0].name != 'self') {
-      m.slots.insert(0, Slot.a('self', self.nilObject, parent: true));
+      m.slots.insert(0, Slot.s(self.nilObject));
       for (var i = 0; i < args.length; i++) {
         m.slots.insert(i + 1, Slot.a(args[i], self.nilObject));
       }

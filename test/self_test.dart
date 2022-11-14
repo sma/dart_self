@@ -108,7 +108,7 @@ void main() {
 
     test('Access an instance slot', () {
       final inst = SelfObject([Slot.c('b', 2)]);
-      final meth = SelfMethod([Slot.c('self', inst, parent: true), Slot.c('a', 1)], [Msg(null, 'b', [])]);
+      final meth = SelfMethod([Slot.s(inst), Slot.c('a', 1)], [Msg(null, 'b', [])]);
       expect(meth.execute(self), 2);
     });
 
