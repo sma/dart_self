@@ -10,20 +10,23 @@ void main() {
   group('Self object:', () {
     test('Access a slot value', () {
       final obj = SelfObject([Slot.c('a', 1)]);
-      expect(self.findSlot(obj, 'a').value, 1);
+      expect(self.findSlot(obj, 'a').$1.value, 1);
+      expect(self.findSlot(obj, 'a').$2, obj);
     });
 
     test('Access a slot value in parent object', () {
       final obj1 = SelfObject([Slot.c('a', 1)]);
       final obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
-      expect(self.findSlot(obj2, 'a').value, 1);
+      expect(self.findSlot(obj2, 'a').$1.value, 1);
+      expect(self.findSlot(obj2, 'a').$2, obj1);
     });
 
     test('Access a slot value in parent object without endless loop', () {
       final obj1 = SelfObject([Slot.c('b', nil, parent: true), Slot.c('a', 1)]);
       final obj2 = SelfObject([Slot.c('p', obj1, parent: true)]);
       obj1.slots[0].value = obj2;
-      expect(self.findSlot(obj2, 'a').value, 1);
+      expect(self.findSlot(obj2, 'a').$1.value, 1);
+      expect(self.findSlot(obj2, 'a').$2, obj1);
     });
 
     test('Access an unknown slot value', () {
@@ -170,7 +173,7 @@ void main() {
       final b = SelfObject([Slot.c('p', a, parent: true)]);
       expect(Msg(null, 'a', []).execute(self, b), 1);
       expect(Msg(null, 'a:', [Lit(2)]).execute(self, b), 2);
-      expect(self.findSlot(a, 'a').value, 2);
+      expect(a.slots[0].value, 2);
     });
 
     test('Explicit message send', () {

@@ -530,23 +530,24 @@ class Msg extends Code {
 
     // search for the method starting with the receiver
     // an error is thrown if there is no matching slot
-    Slot? slot = self.findSlot(r, selector);
-    final v = slot.value;
+    final slotAndHolder = self.findSlot(r, selector);
+    final v = slotAndHolder.$1.value;
 
     // if the slot found is a mutator, search for the matching data slot
     // (which stores the value) which must exist and mutate it
     if (v is Mutator) {
-      slot = self._findSlot(r, v.name, {});
-      if (slot == null) {
-        throw 'MutatorWithoutDataSlot($selector)';
+      for (final slot in (slotAndHolder.$2 as SelfObject).slots) {
+        if (slot.name == v.name) {
+          return slot.value = a.first;
+        }
       }
-      return slot.value = a.first;
+      throw 'MutatorWithoutDataSlot($selector)';
     }
 
     // if the slot contains a method, activate it (this will execute the method)
     if (v is SelfMethod) {
       // in case of implicit sends, we need to set self to the original self
-      final rr = receiver == null ? self.findSlot(r, 'self').value : r;
+      final rr = receiver == null ? self.findSlot(r, 'self').$1.value : r;
 
       return v.activate(self, [rr, ...a]);
     }
@@ -1221,7 +1222,14 @@ class Self {
    * Parses the given [source] and executes it in the context of the [lobby].
    */
   SelfValue execute(String source) {
-    return Parser(this, source).parse().execute(this);
+    final parser = Parser(this, source);
+    SelfValue result = nilObject;
+    while (parser._type != _T.end) {
+      final msg = parser.parseMessage();
+      if (parser._type == _T.dot) parser.index++;
+      result = SelfMethod([Slot.s(lobby)], [msg]).execute(this);
+    }
+    return result;
   }
 
   /**
@@ -1230,49 +1238,42 @@ class Self {
    * must match the arity of the selector [name].
    */
   SelfValue send(String name, List<SelfValue> arguments) {
-    final value = findSlot(arguments[0], name).value;
+    final value = findSlot(arguments[0], name).$1.value;
     if (value is SelfMethod) return value.activate(this, arguments);
     return value;
   }
 
   /**
-   * Returns a slot named [name] of [obj].
+   * Returns a slot named [name] of [obj], optionally starting the search at its parents.
    * Throws a runtime exception if there is no such slot.
    * Throws a runtime exception if there is more than one such slot.
    */
-  Slot findSlot(SelfValue obj, String name) {
-    final slot = _findSlot(obj, name, {});
-    if (slot == null) {
-      throw 'UnknownMessageSend($name)';
-    }
-    return slot;
-  }
+  (Slot, SelfValue) findSlot(SelfValue obj, String name, {bool onlyParents = false}) {
+    final visited = <SelfValue>{};
 
-  Slot? _findSlot(SelfValue obj, String name, Set<SelfValue> visited) {
-    if (!visited.contains(obj)) {
-      visited.add(obj);
+    (Slot, SelfValue)? find(SelfValue obj, bool onlyParents) {
+      if (!visited.add(obj)) return null;
       final slots = _getSlots(obj);
-      //print("$name: $slots");
-      for (final slot in slots) {
-        if (slot.name == name) {
-          return slot;
+      if (!onlyParents) {
+        for (final slot in slots) {
+          if (slot.name == name) return (slot, obj);
         }
       }
-      Slot? foundSlot;
+      (Slot, SelfValue)? result;
       for (final slot in slots) {
-        if (slot.parent) {
-          final s = _findSlot(slot.value, name, visited);
-          if (s != null) {
-            if (foundSlot != null) {
-              throw 'AmbiguousMessageSend($name)';
-            }
-            foundSlot = s;
-          }
+        if (!slot.parent) continue;
+        final r = find(slot.value, false);
+        if (r != null) {
+          if (result != null) throw 'AmbiguousMessageSend($name)';
+          result = r;
         }
       }
-      return foundSlot;
+      return result;
     }
-    return null;
+
+    final result = find(obj, onlyParents);
+    if (result == null) throw 'UnknownMessageSend($name)';
+    return result;
   }
 
   /**
