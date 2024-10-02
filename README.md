@@ -17,14 +17,14 @@ The `Makefile` helps in creating a code coverage report.
 
 ## Resends
 
-Currently, the interpreter is lacking support for but undirected and for
+Currently, the interpreter is **lacking support** for both undirected and for
 directed resends. Neither does the parser understands them nor can the runtime
 system execute them. A resend is a NAME (or `resend` keyword) followed by a DOT
 followed by either a NAME, OPERATOR or KEYWORD, without whitespace inbetween. I
 might be able to use `(\w+)\.(?=\S)|(\w+)` to distinguish resends from normal
 names. Then a `_T.res` could denote resend identifiers, swallowing the dot.
 
-The bigger problem is, that to search for a resend message, I cannot start with
+The bigger problem is that to search for a resend message, I cannot start with
 the receiver for the method lookup but need to start at the parents of the
 object the current method belongs to. This is an information I don't keep track
 of. When normally searching for a method, I find and return the `Slot`. I'd have
